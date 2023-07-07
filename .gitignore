@@ -2,3 +2,6 @@
 melonDS
 /trashed \audio/
 /.vscode
+run-melon.sh
+*.elf
+*.nds

@@ -8,6 +8,7 @@
 #include "beatToHit.cpp"
 #include <iostream>
 #include "audioManager.cpp"
+#include "constants.h"
 #include "noteDefinitions.h"
 
 
@@ -115,13 +116,15 @@ class RhythmPath {
         audioManager.setOctave(OCT_5);
     }
    
-    void OnBeat(int globalBeat, int localBeat, int bar, int progressToNext) {
+    void OnBeat(songPosition pos) {
         //int beat = (globalBeat) % 4 + 1;
         //int bar = (globalBeat) / 4;
-        trySpawnBeat(bar, localBeat, globalBeat + beatLookAhead);
+        trySpawnBeat(pos.bar, pos.localBeat, pos.globalBeat + beatLookAhead);
     }
 
-    void updateBeats(int globalBeat, int progressToNext, int touchX, int touchY) {
+    void updateBeats(songPosition pos, int touchX, int touchY) {
+        int globalBeat = pos.globalBeat;
+        int progressToNext = pos.globalBeatProgress;
         for (size_t i = 0; i < spawnedBeats.size(); i++) {
             BeatInteractable* b = spawnedBeats[i];
             int p = b->getBeatProgress(globalBeat, progressToNext, margin);

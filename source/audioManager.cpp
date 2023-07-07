@@ -35,7 +35,7 @@ class AudioManager {
     }
 
     void startMusic() {
-        mmStart(MOD_TRACKING, MM_PLAY_ONCE);
+        //mmStart(MOD_TRACKING, MM_PLAY_ONCE);
     }
 
     void metronome(int beat) {
@@ -47,7 +47,7 @@ class AudioManager {
 
     void playNote(int length, int note) {
         //mmEffect(SFX_CLICK2);
-        //return;
+        return;
         mm_sfxhand handle = 0;
         mmEffectCancel(SFX_C4_1_BEAT);
         mmEffectCancel(SFX_C4_2_BEATS);

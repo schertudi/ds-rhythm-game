@@ -8,6 +8,7 @@
 #include "trail.cpp"
 #include "beatManager.cpp"
 #include "audioManager.cpp"
+#include "constants.h"
 
 
 int main( int argc, char *argv[] )
@@ -30,7 +31,7 @@ int main( int argc, char *argv[] )
 	CircleEffect pointerEffect(800, 20);
 	touchPosition touch;
 	TouchTracker touchTracker(0);
-	BeatManager beatManager(120, 1);
+	BeatManager beatManager(120, 2); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
 	RhythmPath path(audioManager);
 	
 
@@ -47,44 +48,56 @@ int main( int argc, char *argv[] )
 
 		frame++;
 
-		bool newBeat = beatManager.updateBeat(frame);
-		int beat = beatManager.getGlobalBeat();
-		int progress = beatManager.getProgress();
+		int beatStatus = beatManager.updateBeat(frame);
+		songPosition songPos = beatManager.getSongPosition();
+		int beat = songPos.globalBeat;
+		//int progress = songPos.globalBeatProgress;
 
-		if (newBeat) {
+		if (beatStatus == 1) {
+			audioManager.metronome(1);
+		}
+		if (beatStatus == 2) {
+			audioManager.metronome(2);
+		}
+
+		if (beatStatus > 0) {
 			if (beat == 2) {
 				audioManager.startMusic();
 			}
 
-			if ( (beatManager.getLocalBeat()) % 4 == 0) {
+			if ( (songPos.localBeat) % 4 == 0) {
 				//audioManager.metronome(1);
 			}
 
-			//audioManager.metronome(1);
 			
-			path.OnBeat(beat, beatManager.getLocalBeat(), beatManager.getBar(), progress);
+			
+			path.OnBeat(songPos);
 			
 		}
 
 		if(key & KEY_TOUCH) {
 			touchRead(&touch);
 
-			path.updateBeats(beat, progress, touch.px, touch.py);
+			path.updateBeats(songPos, touch.px, touch.py);
 			
-			pointerEffect.basicCircle(touch.px, touch.py, beatManager.getProgress());
+			pointerEffect.basicCircle(touch.px, touch.py, songPos.globalBeatProgress);
 			touchTracker.logTouch(touch.px, touch.py);
 		} else {
-			path.updateBeats(beat, progress, -100, -100);
+			path.updateBeats(songPos, -100, -100);
 			//pointerEffect.basicCircle(touch.px, touch.py, beatManager.getProgress());
 		}
 		touchTracker.deleteOldEntries();
 		//touchTracker.drawTrail(frame);
 
 		consoleClear();
-		iprintf("\x1b[8;1Hbeat# %i", beat);
-		iprintf("\x1b[9;1Hbar# %i", beatManager.getBar());
-		iprintf("\x1b[10;1Hprogress# %i", progress);
-		iprintf("\x1b[11;1Hcombo# %i", path.getCombo());
+		iprintf("\x1b[8;1HglobalBeat# %i", songPos.globalBeat);
+		iprintf("\x1b[9;1HlocalBeat# %i", songPos.localBeat);
+		iprintf("\x1b[10;1Hbar# %i", songPos.bar);
+		iprintf("\x1b[11;1Hprogress# %i", songPos.globalBeatProgress);
+		iprintf("\x1b[12;1H ");
+		iprintf("\x1b[13;1HsubBeat# %i", songPos.subBeat);
+		iprintf("\x1b[14;1HsubProgress# %i", songPos.subBeatProgress);
+		//iprintf("\x1b[11;1Hcombo# %i", path.getCombo());
 
 		glFlush(0);
 
