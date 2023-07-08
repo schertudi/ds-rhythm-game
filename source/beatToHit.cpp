@@ -91,12 +91,15 @@ class BeatToHit : public BeatInteractable {
     }
 
     int getBeatProgress(int globalBeat, int progressToNext, int margin) {
-        if (globalBeat < beat - 1) { //too soon
+        if (globalBeat < beat - 2) { //too soon
             return 0;
+        }
+        if (globalBeat == beat - 2) { //too soon
+            return progressToNext / 2;
         }
         if (globalBeat == beat - 1) { //about to hit
             if (progressToNext < 100 - margin) { //not yet hit
-                return progressToNext;
+                return 50 + progressToNext / 2;
             }
             return 100; //we consider this a hit even if not quite on the beat
         } else if (globalBeat == beat) { //just hit
@@ -204,12 +207,15 @@ class BeatToSlide : public BeatInteractable {
     int getBeatProgress(int globalBeat, int progressToNext, int margin) {
         //0: no movement. 0-99: about to hit beat. 100: hit start. 101-199: in middle of slide. 200: hit end. 200+: missed.
         //in a slider, you want to hit at start and lift at end.
-        if (globalBeat < startBeat - 1) { //too soon
+        if (globalBeat < startBeat - 2) { //too soon
             return 0;
+        }
+        if (globalBeat == startBeat - 2) { //too soon
+            return progressToNext / 2;
         }
         if (globalBeat == startBeat - 1) { //about to hit start
             if (progressToNext < 100 - margin) { //not yet hit
-                return progressToNext;
+                return 50 + progressToNext / 2;
             }
             return 100; //consider this start hit
         } 
