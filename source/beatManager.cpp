@@ -29,7 +29,7 @@ class BeatManager {
 
     public:
     BeatManager(int b, int sub) {
-        globalBeat = -1;
+        globalBeat = 0;
         bpm = b;
         subBpm = b * sub;
         progress = 0;

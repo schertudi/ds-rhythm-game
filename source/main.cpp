@@ -9,6 +9,7 @@
 #include "beatManager.cpp"
 #include "audioManager.cpp"
 #include "constants.h"
+#include "animator.cpp"
 
 
 int main( int argc, char *argv[] )
@@ -33,6 +34,8 @@ int main( int argc, char *argv[] )
 	TouchTracker touchTracker(0);
 	BeatManager beatManager(120, 2); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
 	RhythmPath path(audioManager);
+
+	Animator animator = Animator();
 	
 
 	//mmLoad( MOD_FLATOUTLIES );
@@ -41,6 +44,32 @@ int main( int argc, char *argv[] )
 
 	//
 
+	while (1) {
+		//draw fun animations........
+		scanKeys();
+		int key = keysHeld();
+
+		frame++;
+
+		int beatStatus = beatManager.updateBeat(frame);
+		songPosition songPos = beatManager.getSongPosition();
+
+		//animator.bouncingBallStraight(songPos.globalBeatProgress, songPos.globalBeat, 2);
+		animator.bouncingBallDiagonal(songPos.globalBeatProgress, songPos.globalBeat);
+		//animator.fillTank(songPos.globalBeatProgress, songPos.globalBeat, 6);
+		animator.sineWave(songPos.globalBeatProgress, songPos.globalBeat, 6, 1);
+		animator.sineWave(songPos.globalBeatProgress, songPos.globalBeat, 6, 2, true);
+
+
+		iprintf("\x1b[8;1Hbeat# %i", songPos.globalBeat);
+		iprintf("\x1b[11;1Hprogress# %i", songPos.globalBeatProgress);
+
+		glFlush(0);
+
+		swiWaitForVBlank();
+	}
+
+/*
 	while(1)
 	{
 		scanKeys();
@@ -93,17 +122,17 @@ int main( int argc, char *argv[] )
 		iprintf("\x1b[8;1Hbeat# %i", songPos.localBeat * songPos.numSubBeats + songPos.subBeat);
 		iprintf("\x1b[9;1Hbar# %i", songPos.bar);
 		iprintf("\x1b[10;1Hcombo %i", path.getCombo());
-		/*
-		iprintf("\x1b[8;1HglobalBeat# %i", songPos.globalBeat);
-		iprintf("\x1b[9;1HlocalBeat# %i", songPos.localBeat);
-		iprintf("\x1b[10;1Hbar# %i", songPos.bar);
-		iprintf("\x1b[11;1Hprogress# %i", songPos.globalBeatProgress);
-		iprintf("\x1b[12;1H ");
-		iprintf("\x1b[13;1HsubBeat# %i", songPos.subBeat);
-		iprintf("\x1b[14;1HsubProgress# %i", songPos.subBeatProgress);
-		iprintf("\x1b[15;1HfineBeat# %i", songPos.localBeat * songPos.numSubBeats + songPos.subBeat);
+		
+		//iprintf("\x1b[8;1HglobalBeat# %i", songPos.globalBeat);
+		//iprintf("\x1b[9;1HlocalBeat# %i", songPos.localBeat);
+		//iprintf("\x1b[10;1Hbar# %i", songPos.bar);
+		//iprintf("\x1b[11;1Hprogress# %i", songPos.globalBeatProgress);
+		//iprintf("\x1b[12;1H ");
+		//iprintf("\x1b[13;1HsubBeat# %i", songPos.subBeat);
+		//iprintf("\x1b[14;1HsubProgress# %i", songPos.subBeatProgress);
+		//iprintf("\x1b[15;1HfineBeat# %i", songPos.localBeat * songPos.numSubBeats + songPos.subBeat);
 		//iprintf("\x1b[11;1Hcombo# %i", path.getCombo());
-		*/
+		
 
 		glFlush(0);
 
@@ -111,6 +140,8 @@ int main( int argc, char *argv[] )
 
 		
 	}
+
+	*/
 
 	return 0;
 	

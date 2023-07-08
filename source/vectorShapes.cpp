@@ -40,7 +40,7 @@ void vectorRect(int x1, int y1, int x2, int y2, Colour c) {
 
 int lerp(int a, int b, int t) { //t is in range of 0 to 100
     //a = 0, b = 200, t = 50 gives 100
-    return ((1 - t) * a + t * b) / 100;
+    return ((100 - t) * a + t * b) / 100;
 }
 
 int inverseLerp(int a, int b, int value) {
