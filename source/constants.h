@@ -13,6 +13,7 @@ struct songPosition {
     int bar;
     int globalBeatProgress; //used for animations
     int subBeatProgress; //used for calculating timings
+    int numSubBeats;
 };
 
 #endif

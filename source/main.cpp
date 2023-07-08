@@ -54,14 +54,14 @@ int main( int argc, char *argv[] )
 		//int progress = songPos.globalBeatProgress;
 
 		if (beatStatus == 1) {
-			audioManager.metronome(1);
+			//audioManager.metronome(1);
 		}
 		if (beatStatus == 2) {
-			audioManager.metronome(2);
+			//audioManager.metronome(2);
 		}
 
 		if (beatStatus > 0) {
-			if (beat == 2) {
+			if (beatStatus == 2 && beat == 2) { //just changed main beat to 2
 				audioManager.startMusic();
 			}
 
@@ -90,6 +90,10 @@ int main( int argc, char *argv[] )
 		//touchTracker.drawTrail(frame);
 
 		consoleClear();
+		iprintf("\x1b[8;1Hbeat# %i", songPos.localBeat * songPos.numSubBeats + songPos.subBeat);
+		iprintf("\x1b[9;1Hbar# %i", songPos.bar);
+		iprintf("\x1b[10;1Hcombo %i", path.getCombo());
+		/*
 		iprintf("\x1b[8;1HglobalBeat# %i", songPos.globalBeat);
 		iprintf("\x1b[9;1HlocalBeat# %i", songPos.localBeat);
 		iprintf("\x1b[10;1Hbar# %i", songPos.bar);
@@ -97,7 +101,9 @@ int main( int argc, char *argv[] )
 		iprintf("\x1b[12;1H ");
 		iprintf("\x1b[13;1HsubBeat# %i", songPos.subBeat);
 		iprintf("\x1b[14;1HsubProgress# %i", songPos.subBeatProgress);
+		iprintf("\x1b[15;1HfineBeat# %i", songPos.localBeat * songPos.numSubBeats + songPos.subBeat);
 		//iprintf("\x1b[11;1Hcombo# %i", path.getCombo());
+		*/
 
 		glFlush(0);
 

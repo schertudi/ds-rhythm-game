@@ -78,7 +78,7 @@ class BeatManager {
     }
 
     songPosition getSongPosition() {
-        songPosition pos = {globalBeat, getLocalBeat(), subBeat, getBar(), progress, subProgress};
+        songPosition pos = {globalBeat, getLocalBeat(), subBeat, getBar(), progress, subProgress, numSubBeats};
         return pos;
     }
 
@@ -89,7 +89,7 @@ class BeatManager {
     }
 
     int getLocalBeat() {
-        return (globalBeat) % 4 + 1;
+        return (globalBeat) % 4;
     }
 
     int getBar() {

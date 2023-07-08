@@ -32,51 +32,56 @@ class RhythmPath {
     */
     private:
     int beatLookAhead = 2;
-    int margin = 30; // if we are 10% close to beat or 10% past this is still correct
+    int margin = 60; // if we are 10% close to beat or 10% past this is still correct
     int combo = 0;
-    bool isComputerPlaying = true;
+    bool isComputerPlaying = false;
     AudioManager audioManager;
+    
 
     //play rhythm, no pitch
 
-    /*
+    
     std::vector<beatEntry> bar1 = {
-        {1, 1, 20, 20, NOTE_C * OCT_3, QUART_BEAT},
-        {5, 5, 50, 20, NOTE_FS * OCT_3, QUART_BEAT},
-        {9, 12, 80, 20, NOTE_AS * OCT_3, ONE_BEAT},
-        {13, 13, 110, 20, NOTE_DS * OCT_4, QUART_BEAT},
+        {0, 0, 20, 20, NOTE_C * OCT_3, QUART_BEAT},
+        {2, 2, 50, 20, NOTE_FS * OCT_3, QUART_BEAT},
+        {4, 4, 80, 20, NOTE_AS * OCT_3, ONE_BEAT},
+        {6, 6, 110, 20, NOTE_DS * OCT_4, ONE_BEAT},
     };
 
     std::vector<beatEntry> bar2 = {
-        {1, 1, 20, 50, NOTE_AS * OCT_3, QUART_BEAT},
-        {5, 8, 50, 50, NOTE_DS * OCT_3, ONE_BEAT},
-        {9, 9, 80, 50, NOTE_AS * OCT_3, QUART_BEAT},
-        {11, 11, 110, 50, NOTE_FS * OCT_3, QUART_BEAT},
-        {13, 13, 130, 50, NOTE_FS * OCT_3, QUART_BEAT}
+        {0, 0, 20, 50, NOTE_AS * OCT_3, QUART_BEAT},
+        {2, 2, 50, 50, NOTE_DS * OCT_3, ONE_BEAT},
+        {4, 4, 80, 50, NOTE_AS * OCT_3, QUART_BEAT},
+        {5, 5, 100, 50, NOTE_AS * OCT_3, QUART_BEAT},
+        {6, 6, 120, 50, NOTE_FS * OCT_3, QUART_BEAT}
     };
 
     std::vector<beatEntry> bar3 = {
-        {1, 1, 20, 50, NOTE_DS * OCT_3, QUART_BEAT},
-        {3, 3, 50, 50, NOTE_FS * OCT_3, QUART_BEAT},
-        {9, 9, 80, 50, NOTE_AS * OCT_3, QUART_BEAT},
-        {11, 11, 110, 50, NOTE_GS * OCT_3, QUART_BEAT}
+        {0, 0, 20, 80, NOTE_DS * OCT_3, QUART_BEAT},
+        {1, 1, 40, 80, NOTE_DS * OCT_3, QUART_BEAT},
+        {4, 4, 80, 80, NOTE_FS * OCT_3, QUART_BEAT},
+        {5, 5, 100, 80, NOTE_AS * OCT_3, QUART_BEAT}
     };
 
     std::vector<beatEntry> bar4 = {
-        {1, 1, 20, 50, NOTE_F * OCT_3, QUART_BEAT},
-        {5, 5, 50, 50, NOTE_F * OCT_3, QUART_BEAT},
-        {9, 9, 80, 50, NOTE_F * OCT_3, QUART_BEAT},
-        {11, 11, 110, 50, NOTE_D * OCT_3, QUART_BEAT},
-        {13, 13, 130, 50, NOTE_FS * OCT_3, QUART_BEAT}
+        {0, 0, 20, 110, NOTE_F * OCT_3, QUART_BEAT},
+        {2, 2, 50, 110, NOTE_F * OCT_3, QUART_BEAT},
+        {4, 4, 80, 110, NOTE_F * OCT_3, QUART_BEAT},
+        {5, 5, 100, 110, NOTE_D * OCT_3, QUART_BEAT},
+        {6, 6, 120, 110, NOTE_FS * OCT_3, QUART_BEAT}
     };
 
     std::vector<beatEntry> bar5 = {
-        {1, 1, 20, 50, NOTE_F * OCT_3, QUART_BEAT}
+        {0, 1, 20, 50, NOTE_F * OCT_3, QUART_BEAT}
     };
-    */
+
+    
+    
+    
 
 //play backing melody
 
+    /*
     std::vector<beatEntry> bar1 = {
         {1, 1, 20, 20, NOTE_DS * OCT_3, ONE_BEAT},
         {2, 2, 50, 20, NOTE_FS * OCT_3, ONE_BEAT},
@@ -101,6 +106,7 @@ class RhythmPath {
         {3, 3, 80, 50, NOTE_F * OCT_3, ONE_BEAT},
         {4, 4, 110, 50, NOTE_D * OCT_3, HALF_BEAT}
     };
+    */
     
 
     std::vector<std::vector<beatEntry>> beatMap = {
@@ -119,15 +125,16 @@ class RhythmPath {
     void OnBeat(songPosition pos) {
         //int beat = (globalBeat) % 4 + 1;
         //int bar = (globalBeat) / 4;
-        trySpawnBeat(pos.bar, pos.localBeat, pos.globalBeat + beatLookAhead);
+        trySpawnBeat(pos);
     }
 
     void updateBeats(songPosition pos, int touchX, int touchY) {
         int globalBeat = pos.globalBeat;
-        int progressToNext = pos.globalBeatProgress;
+        int beat = pos.globalBeat * pos.numSubBeats + pos.subBeat;
+        int progressToNext = pos.subBeatProgress;
         for (size_t i = 0; i < spawnedBeats.size(); i++) {
             BeatInteractable* b = spawnedBeats[i];
-            int p = b->getBeatProgress(globalBeat, progressToNext, margin);
+            int p = b->getBeatProgress(beat, progressToNext, margin);
             //b->render(p);
             if (p >= 300) { //too late
                 incorrectHit(b);
@@ -154,7 +161,7 @@ class RhythmPath {
             }  
 
             if (isHit) {
-                bool hitAtRightTime = b->isHitTime(globalBeat, progressToNext, margin, touchX, touchY);
+                bool hitAtRightTime = b->isHitTime(beat, progressToNext, margin, touchX, touchY);
 
                 if (b->isSlider()) { //non-slider is killed instantly, a slider can only be killed here if hit too early
                     if (!hitAtRightTime) {
@@ -196,7 +203,11 @@ class RhythmPath {
         combo = 0;
     }
 
-    void trySpawnBeat(int bar, int beat, int globalBeat) {
+    void trySpawnBeat(songPosition pos) {
+        int bar = pos.bar;
+        int localBeat = pos.localBeat * pos.numSubBeats + pos.subBeat;
+        int globalBeat = pos.globalBeat * pos.numSubBeats + pos.subBeat + beatLookAhead * pos.numSubBeats;
+
         if (bar >= (int)beatMap.size()) {
             return;
         }
@@ -204,7 +215,7 @@ class RhythmPath {
 
         int index = -1;
         for (size_t i = 0; i < beats.size(); i++) {
-            if (beats[i].beatStart == beat) {
+            if (beats[i].beatStart == localBeat) {
                 index = i;
                 break;
             }
@@ -214,8 +225,8 @@ class RhythmPath {
             return;
         }
 
-        if (beats[index].beatEnd == beat) {
-            std::cout << "spawn beat global " << globalBeat << " beat " << beat << " bar " << bar << std::endl;
+        if (beats[index].beatEnd == localBeat) {
+            //std::cout << "spawn beat global " << globalBeat << " beat " << beat << " bar " << bar << std::endl;
 
             // spawn beat
             BeatToHit* newBeat = new BeatToHit(globalBeat, beats[index].x, beats[index].y, beats[index].length, beats[index].pitch);
