@@ -9,6 +9,7 @@
 #include "vectorShapes.h"
 
 #include "constants.h"
+#include "mathHelpers.h"
 
 
 class Animator {
@@ -136,8 +137,205 @@ class Animator {
         glEnd2D();
     }
 
+    void findDistToAngle() {
+
+    }
+
+    int fullDancingStarfishHelper(int i, int smoothProgress, int radius, int shimmerRot) {
+        int shimmerDensity = 7;
+        int shimmerWidth = 4 + smoothProgress;
+        int r = radius + ((cosLerp(i * shimmerDensity + shimmerRot) * shimmerWidth) >> 12);
+        r = r * r * r / 1000 + 10;
+        return r;
+    }
+
+    int partialDancingStarfishHelper(int i, int smoothProgress, int radius, int startAngle, int endAngle, int shimmerRot) {
+        int shimmerDensity = 10;
+        int shimmerWidth = 5 + smoothProgress;
+
+        int r = radius / 2 + smoothProgress / 3;
+
+        int currAngle = angleToDegrees(i);
+
+        bool betweenIfStartSmall = currAngle > startAngle && currAngle < endAngle;
+        bool betweenIfStartBig = currAngle > startAngle || currAngle < endAngle;
+        
+        if ( (startAngle < endAngle && betweenIfStartSmall) || (startAngle > endAngle && betweenIfStartBig) ) { 
+            //smooth out effect so it fades to nothing near angle extents
+            int rx = radius + ((cosLerp(i * shimmerDensity + shimmerRot) * shimmerWidth) >> 12);
+            rx = rx * rx * rx / 1000 + 10;
+
+            //find dist from curr to start (account for wrap)
+            //find dist between start and end 
+            //can then map as a % where 0 is you are at start and 100 means you are at end
+            //convert so that it goes from 0 to 100 back to 0 and not 0 to 100
+            //use that to lerp
+
+            int distToStart = shortAngleDist(startAngle, currAngle);
+            int startEndDist = shortAngleDist(startAngle, endAngle);
+            int perc = (distToStart * 100) / startEndDist;
+            if (perc > 50) perc = 100 - perc;
+            perc *= 2;
+
+            r = lerp(r, rx, perc);
+            return r;
+
+        }
+
+        return r;
+    }
+
+    void dancingStarfish(Vec2d pos, int progress, int beat, bool partial=false, int startAngle=0, int endAngle = 360) {
+        int smoothProgress = sinLerp((progress * 32767) / 100) / 1000;
+        if (smoothProgress < 0) smoothProgress /= 2;
+        int radius = 20;
+       
+        int shimmerRot = 0;
+        if (!partial) shimmerRot = (progress - 50) * (32767) / 100;
+
+        int xOrigin = pos.x;
+        int yOrigin = pos.y;
+
+        int step = 256;
+
+        startAngle = normalizeAngle(startAngle);
+        endAngle = normalizeAngle(endAngle);
+
+        glBegin2D();
+
+        //draw a filled circle using triangles
+        int i;
+        int r; 
+        int r2;
+
+        for( i = 0; i < 0 + BRAD_PI*2; i += step)
+        {
+            
+            if (!partial) r = fullDancingStarfishHelper(i, smoothProgress, radius, shimmerRot);
+            else r = partialDancingStarfishHelper(i, smoothProgress, radius, startAngle, endAngle, shimmerRot);
+            
+            int x = (cosLerp(i) * (r) ) >> 12;
+            int y = (sinLerp(i) * (r) ) >> 12;
+
+            if (!partial) r2 = fullDancingStarfishHelper(i + step, smoothProgress, radius, shimmerRot);
+            else r2 = partialDancingStarfishHelper(i + step, smoothProgress, radius, startAngle, endAngle, shimmerRot);
+            int x2 = (cosLerp(i + step) * (r2) ) >> 12;
+            int y2 = (sinLerp(i + step) * (r2) ) >> 12;
+
+            // draw a triangle
+            glTriangleFilled( xOrigin + x, yOrigin + y,
+                            xOrigin + x2, yOrigin + y2,
+                            xOrigin, yOrigin,
+                            RGB15(10, 30, 10) );
+        }
+                
+        glEnd2D();
+    }
+
+    void slidingStarfish(Vec2d start, Vec2d end, Vec2d penPos, int progress, int beat) {
+        vectorThickLine(start.x, start.y, end.x, end.y, 9, {10, 10, 10});
+
+        int angleRad = intAtan2(penPos.y - start.y, penPos.x - start.x);
+        int angleDeg = angleRad * 180 / 314;
+        angleDeg += 180;
+
+        dancingStarfish(penPos, progress, beat, true, angleDeg - 80, angleDeg + 80);
+    }
 };
 
+class ThrowableObject { //persists after animation is done, can be interacted with by pen
+    int x;
+    int y;
+    Vec2d velTotal;
+    Vec2d vel;
+    int velCount;
+    bool useVel;
+    bool isPenDown;
+    bool useGravity = true;
+    int gravity;
+    Vec2d targetPos = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4 * 3};
+    int targetBeat = 5;
+
+    public:
+    ThrowableObject(int x, int y) {
+        this->x = x;
+        this->y = y;
+        useVel = false;
+        isPenDown = false;
+        resetVelocity();
+    }
+
+    void resetVelocity() {
+        velTotal = {0, 0};
+        vel = {0, 0};
+        velCount = 0;
+        gravity = 0;
+    }
+
+    void draw(int frame, int beat, int progress) {
+        vectorCircle(x, y, 10, {31, 31, 31});
+
+        if ((!isPenDown)) {
+            x += vel.x;
+            y += vel.y;
+
+            if (useGravity) {
+                if (frame % 3 == 0 && beat != targetBeat - 1) {
+                    if (gravity > -5) gravity -= 1;
+                }
+                y -= gravity;
+            }
+        }
+
+        if (beat == targetBeat - 1) {
+            //lerp to target based on progress
+            x = lerp(x, targetPos.x, progress);
+            y = lerp(y, targetPos.y, progress);
+        }
+
+        if (beat >= targetBeat) {
+            x = targetPos.x;
+            y = targetPos.y;
+        }
+    }
+
+    void penDown(int beat, int _x, int _y) {
+        if (beat < targetBeat) goTo(_x, _y);
+        if (isPenDown) return;
+        
+        isPenDown = true;
+        resetVelocity();
+        useVel = false;
+    }
+
+    void penUp() {
+        if (!isPenDown) return;
+        isPenDown = false;
+        useVel = true;
+    }
+
+    void goTo(int _x, int _y) {
+        int oldX = x;
+        int oldY = y;
+        x = _x;
+        y = _y;
+
+        velTotal.x += x - oldX;
+        velTotal.y += y - oldY;
+        velCount += 1;
+
+        Vec2d dir = {velTotal.x / velCount, velTotal.y / velCount};
+        dir.x /= 2;
+        dir.y /= 2;
+
+        //vel = normalise(dir);
+        vel = dir;
+
+        
+        
+    }
+
+};
 
 
 #endif

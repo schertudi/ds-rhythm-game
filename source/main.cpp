@@ -10,6 +10,9 @@
 #include "audioManager.cpp"
 #include "constants.h"
 #include "animator.cpp"
+#include "vectorShapes.h"
+#include "mathHelpers.h"
+
 
 
 int main( int argc, char *argv[] )
@@ -36,6 +39,7 @@ int main( int argc, char *argv[] )
 	RhythmPath path(audioManager);
 
 	Animator animator = Animator();
+	ThrowableObject throwObject = ThrowableObject(0, 0);
 	
 
 	//mmLoad( MOD_FLATOUTLIES );
@@ -44,6 +48,7 @@ int main( int argc, char *argv[] )
 
 	//
 
+	
 	while (1) {
 		//draw fun animations........
 		scanKeys();
@@ -55,14 +60,35 @@ int main( int argc, char *argv[] )
 		songPosition songPos = beatManager.getSongPosition();
 
 		//animator.bouncingBallStraight(songPos.globalBeatProgress, songPos.globalBeat, 2);
-		animator.bouncingBallDiagonal(songPos.globalBeatProgress, songPos.globalBeat);
+		//animator.bouncingBallDiagonal(songPos.globalBeatProgress, songPos.globalBeat);
 		//animator.fillTank(songPos.globalBeatProgress, songPos.globalBeat, 6);
-		animator.sineWave(songPos.globalBeatProgress, songPos.globalBeat, 6, 1);
-		animator.sineWave(songPos.globalBeatProgress, songPos.globalBeat, 6, 2, true);
+		//animator.sineWave(songPos.globalBeatProgress, songPos.globalBeat, 6, 1);
+		//animator.sineWave(songPos.globalBeatProgress, songPos.globalBeat, 6, 2, true);
+		//animator.dancingStarfish(songPos.globalBeatProgress, songPos.globalBeat);
+		//animator.slidingStarfish({100,50}, {200, 100}, {30, 30}, songPos.globalBeatProgress, songPos.globalBeat);
+		
+
+		
+		int x = SCREEN_WIDTH / 2;
+		int y = -100;
+		if(key & KEY_TOUCH) {
+			touchRead(&touch);
+			throwObject.penDown(songPos.globalBeat, touch.px, touch.py);
+			x = touch.px;
+			y = touch.py;
+		} else {
+			throwObject.penUp();
+		}
+
+		animator.slidingStarfish({20, 20}, {100, 50}, {x, y}, songPos.globalBeatProgress, songPos.globalBeat);
+
+		//throwObject.draw(frame, songPos.globalBeat, songPos.globalBeatProgress);
 
 
 		iprintf("\x1b[8;1Hbeat# %i", songPos.globalBeat);
 		iprintf("\x1b[11;1Hprogress# %i", songPos.globalBeatProgress);
+		Vec2d norm = normalizeVec({0, 3});
+		
 
 		glFlush(0);
 
