@@ -5,6 +5,7 @@
 #include <nds/arm9/console.h>
 #include <stdio.h>
 #include <gl2d.h>
+#include <tuple>
 #include "vscode_fix.h"
 #include "vectorShapes.h"
 
@@ -137,10 +138,6 @@ class Animator {
         glEnd2D();
     }
 
-    void findDistToAngle() {
-
-    }
-
     int fullDancingStarfishHelper(int i, int smoothProgress, int radius, int shimmerRot) {
         int shimmerDensity = 7;
         int shimmerWidth = 4 + smoothProgress;
@@ -188,8 +185,8 @@ class Animator {
     void dancingStarfish(Vec2d pos, int progress, int beat, bool partial=false, int startAngle=0, int endAngle = 360) {
         int smoothProgress = sinLerp((progress * 32767) / 100) / 1000;
         if (smoothProgress < 0) smoothProgress /= 2;
-        int radius = 20;
        
+        int radius = 20;
         int shimmerRot = 0;
         if (!partial) shimmerRot = (progress - 50) * (32767) / 100;
 
@@ -219,6 +216,7 @@ class Animator {
 
             if (!partial) r2 = fullDancingStarfishHelper(i + step, smoothProgress, radius, shimmerRot);
             else r2 = partialDancingStarfishHelper(i + step, smoothProgress, radius, startAngle, endAngle, shimmerRot);
+
             int x2 = (cosLerp(i + step) * (r2) ) >> 12;
             int y2 = (sinLerp(i + step) * (r2) ) >> 12;
 
@@ -233,13 +231,78 @@ class Animator {
     }
 
     void slidingStarfish(Vec2d start, Vec2d end, Vec2d penPos, int progress, int beat) {
-        vectorThickLine(start.x, start.y, end.x, end.y, 9, {10, 10, 10});
+        Vec2d lineDir = {end.x - start.x, end.y - start.y};
+        lineDir = normalizeVec(lineDir);
 
-        int angleRad = intAtan2(penPos.y - start.y, penPos.x - start.x);
+        int startThickness = 4;
+        int endThickness = 10;
+
+        Vec2d farStart = {start.x - (lineDir.x * startThickness) / 100, start.y - (lineDir.y * startThickness) / 100};
+
+        int angleRad = intAtan2(penPos.y - farStart.y, penPos.x - farStart.x);
         int angleDeg = angleRad * 180 / 314;
         angleDeg += 180;
+        
+        std::tuple<Vec2d, int> proj = projectPointToLine(start, end, penPos);
+        Vec2d starfishPos = std::get<0>(proj);
+        int lineProgress = std::get<1>(proj);
 
-        dancingStarfish(penPos, progress, beat, true, angleDeg - 80, angleDeg + 80);
+        int width = lerp(startThickness, endThickness, lineProgress);
+
+        vectorWideningLine(start.x, start.y, starfishPos.x, starfishPos.y, startThickness, width, {10, 10, 10});
+
+        dancingStarfish(starfishPos, progress, beat, true, angleDeg - 80, angleDeg + 80);
+    }
+
+    void slidingCircle(Vec2d start, Vec2d end, Vec2d penPos) {
+        std::tuple<Vec2d, int> proj = projectPointToLine(start, end, penPos);
+        Vec2d circlePos = std::get<0>(proj);
+        vectorThickLine(start.x, start.y, end.x, end.y, 2, {10, 10, 10});
+        vectorCircle(circlePos.x, circlePos.y, 10, {31, 31, 31});
+    }
+
+    void flyingBall(int progress, int beat, Vec2d start, Vec2d end, int elevation) {
+
+        Vec2d peak = {(start.x + end.x) / 2, start.y - elevation}; //highest point; gradient = 0
+        
+        //calc middle control point - https://stackoverflow.com/questions/22237780/how-to-model-quadratic-equation-using-a-bezier-curve-calculate-control-point
+        int midX = 2*peak.x -start.x/2 -end.x/2;
+        int midY = 2*peak.y -start.y/2 -end.y/2;
+
+        int time = progress + beat * 100;
+        int endBeat = 200;
+        //lerp time to fit in range of startX to endX
+        int t = inverseLerp(0, endBeat, time);
+        if (t > 100) t = 100;
+
+        Vec2d point = threePointBezier(start, {midX, midY}, end, t);
+        //vectorCircle(start.x, start.y, 5, {10, 31, 31});
+        //vectorCircle(end.x, end.y, 5, {31, 31, 10});
+        vectorCircle(point.x, point.y, 10, {31, 31, 31});
+
+    }
+
+    void colourChangeSlider(int x, int startY, int endY, Colour startC, Colour endC, Vec2d penPos) {
+        Vec2d sliderPos = {x, startY};
+        
+        if (startY < endY) {
+            if (penPos.y < startY) sliderPos.y = startY;
+            else if (penPos.y > endY) sliderPos.y = endY;
+            else sliderPos.y = penPos.y;
+        } else {
+            if (penPos.y > startY) sliderPos.y = startY;
+            else if (penPos.y < endY) sliderPos.y = endY;
+            else sliderPos.y = penPos.y;
+        }
+        
+        int lerp = inverseLerp(startY, endY, sliderPos.y);
+        Colour c = lerpColour(startC, endC, lerp);
+
+        vectorRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, c);
+
+        vectorRect(x - 2, startY, x + 2, endY, {5, 5, 5});
+
+        vectorRect(sliderPos.x - 10, sliderPos.y - 5, sliderPos.x + 10, sliderPos.y + 5, {5, 5, 5});
     }
 };
 

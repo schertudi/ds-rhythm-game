@@ -41,16 +41,22 @@ void vectorRect(int x1, int y1, int x2, int y2, Colour c) {
 }
 
 void vectorThickLine(int x1, int y1, int x2, int y2, int lineWidth, Colour c, bool caps) {
+    vectorWideningLine(x1, y1, x2, y2, lineWidth, lineWidth, c, caps);
+}
+
+void vectorWideningLine(int x1, int y1, int x2, int y2, int width1, int width2, Colour c, bool caps) {
     Vec2d perp = perpVec({x2 - x1, y2 - y1});
     perp = normalizeVec(perp);
     
-    int lineOffsetX = (perp.x * lineWidth) / 100;
-    int lineOffsetY = (perp.y * lineWidth) / 100;
+    int lineOffsetX1 = (perp.x * width1) / 100;
+    int lineOffsetY1 = (perp.y * width1) / 100;
+    int lineOffsetX2 = (perp.x * width2) / 100;
+    int lineOffsetY2 = (perp.y * width2) / 100;
 
-    Vec2d corn1 = {x1 + lineOffsetX, y1 + lineOffsetY};
-    Vec2d corn2 = {x1 - lineOffsetX, y1 - lineOffsetY};
-    Vec2d corn3 = {x2 + lineOffsetX, y2 + lineOffsetY};
-    Vec2d corn4 = {x2 - lineOffsetX, y2 - lineOffsetY};
+    Vec2d corn1 = {x1 + lineOffsetX1, y1 + lineOffsetY1};
+    Vec2d corn2 = {x1 - lineOffsetX1, y1 - lineOffsetY1};
+    Vec2d corn3 = {x2 + lineOffsetX2, y2 + lineOffsetY2};
+    Vec2d corn4 = {x2 - lineOffsetX2, y2 - lineOffsetY2};
 
     glBegin2D();
         glTriangleFilled(corn1.x, corn1.y, corn2.x, corn2.y, corn3.x, corn3.y, RGB15(c.r, c.g, c.b));
@@ -59,7 +65,7 @@ void vectorThickLine(int x1, int y1, int x2, int y2, int lineWidth, Colour c, bo
 
     //could optimise a bit by not drawing what is covered by line
     if (caps) {
-        vectorCircle(x1, y1, lineWidth - 1, c);
-        vectorCircle(x2, y2, lineWidth - 1, c);
+        vectorCircle(x1, y1, width1 - 1, c);
+        vectorCircle(x2, y2, width2 - 1, c);
     }
 }
