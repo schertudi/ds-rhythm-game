@@ -10,7 +10,7 @@
 #include "vectorShapes.h"
 #include "mathHelpers.h"
 
-void vectorCircle(int xOrigin, int yOrigin, int radius, Colour c) { // beatProgress is 0-100
+void vectorCircle(int xOrigin, int yOrigin, int radius, Colour c, int depth) { // beatProgress is 0-100
     glBegin2D();
 
     //draw a filled circle using triangles
@@ -28,23 +28,23 @@ void vectorCircle(int xOrigin, int yOrigin, int radius, Colour c) { // beatProgr
         glTriangleFilled( xOrigin + x, yOrigin + y,
                         xOrigin + x2, yOrigin + y2,
                         xOrigin, yOrigin,
-                        RGB15(c.r, c.g, c.b) );
+                        RGB15(c.r, c.g, c.b), depth);
     }
             
     glEnd2D();
 }
 
-void vectorRect(int x1, int y1, int x2, int y2, Colour c) {
+void vectorRect(int x1, int y1, int x2, int y2, Colour c, int depth) {
     glBegin2D();
-    glBoxFilled(x1, y1, x2, y2, RGB15(c.r, c.g, c.b));
+    glBoxFilled(x1, y1, x2, y2, RGB15(c.r, c.g, c.b), depth);
     glEnd2D();
 }
 
-void vectorThickLine(int x1, int y1, int x2, int y2, int lineWidth, Colour c, bool caps) {
-    vectorWideningLine(x1, y1, x2, y2, lineWidth, lineWidth, c, caps);
+void vectorThickLine(int x1, int y1, int x2, int y2, int lineWidth, Colour c, int depth, bool caps) {
+    vectorWideningLine(x1, y1, x2, y2, lineWidth, lineWidth, c, depth, caps);
 }
 
-void vectorWideningLine(int x1, int y1, int x2, int y2, int width1, int width2, Colour c, bool caps) {
+void vectorWideningLine(int x1, int y1, int x2, int y2, int width1, int width2, Colour c, int depth, bool caps) {
     Vec2d perp = perpVec({x2 - x1, y2 - y1});
     perp = normalizeVec(perp);
     
@@ -59,13 +59,13 @@ void vectorWideningLine(int x1, int y1, int x2, int y2, int width1, int width2, 
     Vec2d corn4 = {x2 - lineOffsetX2, y2 - lineOffsetY2};
 
     glBegin2D();
-        glTriangleFilled(corn1.x, corn1.y, corn2.x, corn2.y, corn3.x, corn3.y, RGB15(c.r, c.g, c.b));
-        glTriangleFilled(corn2.x, corn2.y, corn3.x, corn3.y, corn4.x, corn4.y, RGB15(c.r, c.g, c.b));
+        glTriangleFilled(corn1.x, corn1.y, corn2.x, corn2.y, corn3.x, corn3.y, RGB15(c.r, c.g, c.b), depth);
+        glTriangleFilled(corn2.x, corn2.y, corn3.x, corn3.y, corn4.x, corn4.y, RGB15(c.r, c.g, c.b), depth);
     glEnd2D();
 
     //could optimise a bit by not drawing what is covered by line
     if (caps) {
-        vectorCircle(x1, y1, width1 - 1, c);
-        vectorCircle(x2, y2, width2 - 1, c);
+        vectorCircle(x1, y1, width1 - 1, c, depth);
+        vectorCircle(x2, y2, width2 - 1, c, depth);
     }
 }

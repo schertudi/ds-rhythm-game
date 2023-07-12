@@ -16,4 +16,13 @@ struct songPosition {
     int numSubBeats;
 };
 
+
+#define NUM_SUBLAYERS 10
+#define ANIMATION_BG_LAYER 1 * NUM_SUBLAYERS
+#define ANIMATION_MG_LAYER 2 * NUM_SUBLAYERS
+#define ANIMATION_FG_LAYER 3 * NUM_SUBLAYERS
+#define BEATPATH_LAYER 4 * NUM_SUBLAYERS
+
+
+
 #endif

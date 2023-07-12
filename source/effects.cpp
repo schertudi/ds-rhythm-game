@@ -56,7 +56,7 @@ class CircleEffect {
 			glTriangleFilled( xOrigin + x, yOrigin + y,
 							xOrigin + x2, yOrigin + y2,
 							xOrigin, yOrigin,
-							RGB15(15,0,31) );
+							RGB15(15,0,31), 0 );
 		}
 				
 		glEnd2D();
@@ -82,7 +82,7 @@ class CircleEffect {
 			glTriangleFilled( xOrigin + x, yOrigin + y,
 							xOrigin + x2, yOrigin + y2,
 							xOrigin, yOrigin,
-							RGB15(31,0,31) );
+							RGB15(31,0,31), 0 );
 		}
 				
 		glEnd2D();

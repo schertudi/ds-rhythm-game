@@ -1,5 +1,6 @@
 #include "vectorShapes.h"
 #include "audioManager.cpp"
+#include "constants.h"
 
 class BeatInteractable {
     private:
@@ -76,7 +77,7 @@ class BeatToHit : public BeatInteractable {
 
     void render(int progress) override {
         int r = getRadiusByProgress(progress);
-        vectorCircle(x, y, r, {31, 31, 31});
+        vectorCircle(x, y, r, {31, 31, 31}, BEATPATH_LAYER);
     }
 
     bool isHit(int touchX, int touchY) override {
@@ -156,15 +157,15 @@ class BeatToSlide : public BeatInteractable {
 
     void render(int progress) override {
         int r = 10;
-        vectorCircle(endX, endY, r, {31, 31, 31});
+        vectorCircle(endX, endY, r, {31, 31, 31}, BEATPATH_LAYER);
         
         if (progress < 100) {
             
             r = 10 - progress / 20;
-            vectorCircle(startX, startY, r, {31, 31, 31});
+            vectorCircle(startX, startY, r, {31, 31, 31}, BEATPATH_LAYER);
 
             r = 10;
-            vectorRect(startX, startY - r, endX, endY + r, {31, 31, 31});
+            vectorRect(startX, startY - r, endX, endY + r, {31, 31, 31}, BEATPATH_LAYER);
         } else if (progress <= 200) {
             int r1 = 5;
             int r2 = 10;
@@ -179,9 +180,9 @@ class BeatToSlide : public BeatInteractable {
             */
 
             //int midY = (startY + endY) * (progress - 100) / 100;
-            if (progress == 100) vectorCircle(startX, startY, r1, {15, 15, 31});
-            vectorRect(startX, startY - r1, midX, endY + r1, {15, 15, 31});
-            vectorRect(midX, startY - r2, endX, endY + r2, {31, 31, 31});
+            if (progress == 100) vectorCircle(startX, startY, r1, {15, 15, 31}, BEATPATH_LAYER);
+            vectorRect(startX, startY - r1, midX, endY + r1, {15, 15, 31}, BEATPATH_LAYER);
+            vectorRect(midX, startY - r2, endX, endY + r2, {31, 31, 31}, BEATPATH_LAYER);
         } else {
             r = 10;
             

@@ -48,7 +48,7 @@ class Animator {
 
         int x = lerp(start.x, hit.x, prog);
         int y = lerp(start.y, hit.y, prog);
-        vectorCircle(x, y, 10, {31, 31, 31});
+        vectorCircle(x, y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
     }
 
     void bouncingBallDiagonal(int progress, int beat) { //beat 0 start and then we offset from there
@@ -83,22 +83,22 @@ class Animator {
             y = lerp(hit.y, end.y, prog);
         }
 
-        vectorCircle(x, y, 10, {31, 31, 31});
+        vectorCircle(x, y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
     }
 
     void fillTank(int progress, int beat, int numBeats) {
         beat = beat % numBeats;
         if (beat < numBeats - 2) {
             int y = (SCREEN_HEIGHT / numBeats * (numBeats - beat));
-            vectorRect(0, y, SCREEN_WIDTH, SCREEN_HEIGHT, {0, 31, 25});
+            vectorRect(0, y, SCREEN_WIDTH, SCREEN_HEIGHT, {0, 31, 25}, ANIMATION_BG_LAYER);
         } else if (beat < numBeats - 1) {
             int y = (SCREEN_HEIGHT / numBeats * (numBeats - beat));
-            vectorRect(0, y, SCREEN_WIDTH, SCREEN_HEIGHT, {0, 31, 15});
+            vectorRect(0, y, SCREEN_WIDTH, SCREEN_HEIGHT, {0, 31, 15}, ANIMATION_BG_LAYER);
         } else {
             //animate it being drained; at progress = 0 we are at min y and at progress = 0 we are at SCREEN_HEIGHT
             //if (progress < 50) progress = 0;
             int y = lerp((SCREEN_HEIGHT / numBeats * (numBeats - beat + 1)), SCREEN_HEIGHT, progress);
-            vectorRect(0, y, SCREEN_WIDTH, SCREEN_HEIGHT, {0, 31, 15});
+            vectorRect(0, y, SCREEN_WIDTH, SCREEN_HEIGHT, {0, 31, 15}, ANIMATION_BG_LAYER);
         }
     }
 
@@ -132,7 +132,7 @@ class Animator {
             glTriangleFilled(x, y,
                             x2, y2,
                             x, pivotY,
-                            RGB15(21, 0, 21) );
+                            RGB15(21, 0, 21), ANIMATION_BG_LAYER);
         }
                 
         glEnd2D();
@@ -224,7 +224,7 @@ class Animator {
             glTriangleFilled( xOrigin + x, yOrigin + y,
                             xOrigin + x2, yOrigin + y2,
                             xOrigin, yOrigin,
-                            RGB15(10, 30, 10) );
+                            RGB15(10, 30, 10), ANIMATION_FG_LAYER);
         }
                 
         glEnd2D();
@@ -249,7 +249,7 @@ class Animator {
 
         int width = lerp(startThickness, endThickness, lineProgress);
 
-        vectorWideningLine(start.x, start.y, starfishPos.x, starfishPos.y, startThickness, width, {10, 10, 10});
+        vectorWideningLine(start.x, start.y, starfishPos.x, starfishPos.y, startThickness, width, {10, 10, 10}, ANIMATION_MG_LAYER);
 
         dancingStarfish(starfishPos, progress, beat, true, angleDeg - 80, angleDeg + 80);
     }
@@ -257,8 +257,8 @@ class Animator {
     void slidingCircle(Vec2d start, Vec2d end, Vec2d penPos) {
         std::tuple<Vec2d, int> proj = projectPointToLine(start, end, penPos);
         Vec2d circlePos = std::get<0>(proj);
-        vectorThickLine(start.x, start.y, end.x, end.y, 2, {10, 10, 10});
-        vectorCircle(circlePos.x, circlePos.y, 10, {31, 31, 31});
+        vectorThickLine(start.x, start.y, end.x, end.y, 2, {10, 10, 10}, ANIMATION_FG_LAYER);
+        vectorCircle(circlePos.x, circlePos.y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
     }
 
     void flyingBall(int progress, int beat, Vec2d start, Vec2d end, int elevation) {
@@ -278,7 +278,7 @@ class Animator {
         Vec2d point = threePointBezier(start, {midX, midY}, end, t);
         //vectorCircle(start.x, start.y, 5, {10, 31, 31});
         //vectorCircle(end.x, end.y, 5, {31, 31, 10});
-        vectorCircle(point.x, point.y, 10, {31, 31, 31});
+        vectorCircle(point.x, point.y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
 
     }
 
@@ -298,11 +298,11 @@ class Animator {
         int lerp = inverseLerp(startY, endY, sliderPos.y);
         Colour c = lerpColour(startC, endC, lerp);
 
-        vectorRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, c);
+        vectorRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, c, ANIMATION_BG_LAYER);
 
-        vectorRect(x - 2, startY, x + 2, endY, {5, 5, 5});
+        vectorRect(x - 2, startY, x + 2, endY, {5, 5, 5}, ANIMATION_FG_LAYER);
 
-        vectorRect(sliderPos.x - 10, sliderPos.y - 5, sliderPos.x + 10, sliderPos.y + 5, {5, 5, 5});
+        vectorRect(sliderPos.x - 10, sliderPos.y - 5, sliderPos.x + 10, sliderPos.y + 5, {5, 5, 5}, ANIMATION_FG_LAYER);
     }
 
     void shakingObject(int beat, int progress) {
@@ -328,13 +328,13 @@ class Animator {
         if (t > 100) t = 100;
         int size = lerp(startSize, endSize, t);
 
-        vectorCircle(x + shakeX, y + shakeY, size, {31, 31, 31});
+        vectorCircle(x + shakeX, y + shakeY, size, {31, 31, 31}, ANIMATION_FG_LAYER);
     }
 
     void hitObject(int progress) {
         int baseX = SCREEN_WIDTH / 2;
         int baseY = SCREEN_HEIGHT / 2;
-        vectorCircle(baseX, baseY, 15, {31, 31, 31});
+        vectorCircle(baseX, baseY, 17, {31, 31, 31}, ANIMATION_FG_LAYER);
     }
 
     void burstingObject(int beat, int progress) {
@@ -365,11 +365,11 @@ class Animator {
             int partX = (cosLerp(angle + rot) * (posRadius) ) >> 12;
             int partY = (sinLerp(angle + rot) * (posRadius) ) >> 12;
 
-            vectorCircle(baseX + partX, baseY + partY, particleRadius, {31, 31, 31});
+            vectorCircle(baseX + partX, baseY + partY, particleRadius, {31, 31, 31}, ANIMATION_MG_LAYER);
         }
 
         int objRadius = lerp(objStartRadius, objEndRadius, (t * t) / 100);
-        vectorCircle(baseX, baseY, objRadius, {31, 31, 31});
+        vectorCircle(baseX, baseY, objRadius, {31, 31, 31}, ANIMATION_FG_LAYER);
 
 
     }
@@ -405,7 +405,7 @@ class ThrowableObject { //persists after animation is done, can be interacted wi
     }
 
     void draw(int frame, int beat, int progress) {
-        vectorCircle(x, y, 10, {31, 31, 31});
+        vectorCircle(x, y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
 
         if ((!isPenDown)) {
             x += vel.x;
