@@ -4,11 +4,11 @@
 
 #include "vectorShapes.h"
 #include <tuple>
+#include "vscode_fix.h"
 
 
 int intAtan2(int y, int x) {
     //http://dspguru.com/dsp/tricks/fixed-point-atan2-with-self-normalization/
-    int pi = 314; //*100
     int coeff_1 = 78; //pi / 4 ie 0.78525
     int coeff_2 = 235; //pi / 4 * 3 ie 2.35575
     x *= 1000;
@@ -61,8 +61,8 @@ int inverseLerp(int a, int b, int value) {
 
 Vec2d normalizeVec(Vec2d vec) { //returns to 2dp, so 100 -> 1.0
     int sqrtFixed = sqrtf32( (vec.x * vec.x + vec.y * vec.y) << 12 );
-    int sqrtInt = sqrtFixed >> 12;
-    int sqrtFlt = sqrtFixed & 0xFFF;
+    //int sqrtInt = sqrtFixed >> 12;
+    //int sqrtFlt = sqrtFixed & 0xFFF;
     int xFixed = vec.x << 12;
     int yFixed = vec.y << 12;
     //int sqrt3dp = sqrtInt * 100 + sqrtFlt;

@@ -14,6 +14,7 @@ class AudioManager {
     private:
         bool isFirst;
         int octave = OCT_4; //base octave
+        bool usePitch = false;
 
     public: 
     AudioManager() {
@@ -79,7 +80,7 @@ class AudioManager {
                 break;
             }
 
-        //mmEffectRate(handle, note / 100);
+        if (usePitch) mmEffectRate(handle, note / 100);
         //mmEffectRelease(handle);
     }
 

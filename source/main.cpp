@@ -38,7 +38,6 @@ int main( int argc, char *argv[] )
 	RhythmPath path(audioManager);
 
 	Animator animator = Animator();
-	ThrowableObject throwObject = ThrowableObject(0, 0);
 	
 
 	//mmLoad( MOD_FLATOUTLIES );
@@ -55,7 +54,7 @@ int main( int argc, char *argv[] )
 
 		frame++;
 
-		int beatStatus = beatManager.updateBeat(frame);
+		beatManager.updateBeat(frame);
 		songPosition songPos = beatManager.getSongPosition();
 
 		//animator.bouncingBallStraight(songPos.globalBeatProgress, songPos.globalBeat, 2);
@@ -83,11 +82,9 @@ int main( int argc, char *argv[] )
 		int y = -100;
 		if(key & KEY_TOUCH) {
 			touchRead(&touch);
-			throwObject.penDown(songPos.globalBeat, touch.px, touch.py);
 			x = touch.px;
 			y = touch.py;
 		} else {
-			throwObject.penUp();
 		}
 
 		animator.slidingStarfish({20, 20}, {100, 50}, {x, y}, songPos.globalBeatProgress, songPos.globalBeat);
@@ -99,7 +96,6 @@ int main( int argc, char *argv[] )
 
 		iprintf("\x1b[8;1Hbeat# .%i.", songPos.globalBeat);
 		iprintf("\x1b[11;1Hprogress# .%i.", songPos.globalBeatProgress);
-		Vec2d norm = normalizeVec({0, 3});
 		
 
 		glFlush(0);

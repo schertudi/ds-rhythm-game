@@ -12,3 +12,5 @@ int	iprintf (const char *, ...)
                _ATTRIBUTE ((__format__ (__printf__, 1, 2)));
 
 void lcdMainOnBottom();
+
+int32 sqrtf32(int32 a);

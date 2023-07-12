@@ -129,7 +129,6 @@ class RhythmPath {
     }
 
     void updateBeats(songPosition pos, int touchX, int touchY) {
-        int globalBeat = pos.globalBeat;
         int beat = pos.globalBeat * pos.numSubBeats + pos.subBeat;
         int progressToNext = pos.subBeatProgress;
         for (size_t i = 0; i < spawnedBeats.size(); i++) {
