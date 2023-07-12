@@ -304,6 +304,75 @@ class Animator {
 
         vectorRect(sliderPos.x - 10, sliderPos.y - 5, sliderPos.x + 10, sliderPos.y + 5, {5, 5, 5});
     }
+
+    void shakingObject(int beat, int progress) {
+        int time = progress + beat * 100;
+        int endBeat = 200;
+
+        int x = SCREEN_WIDTH / 2;
+        int y = SCREEN_HEIGHT / 2;
+
+        int numShakesInBeat = 2;
+        int shakeWidth = 5; //move 5px at most
+
+        int shakeX = progress % (100 / numShakesInBeat); 
+        int t = inverseLerp(0, (100 / numShakesInBeat), shakeX);
+        shakeX = lerp(0, shakeWidth * 2, t);
+        if (shakeX > shakeWidth) shakeX = shakeWidth * 2 - shakeX;
+        
+        int shakeY = sinLerp(progress * 600) / 1500;
+
+        int startSize = 10;
+        int endSize = 12;
+        t = inverseLerp(0, endBeat, time);
+        if (t > 100) t = 100;
+        int size = lerp(startSize, endSize, t);
+
+        vectorCircle(x + shakeX, y + shakeY, size, {31, 31, 31});
+    }
+
+    void hitObject(int progress) {
+        int baseX = SCREEN_WIDTH / 2;
+        int baseY = SCREEN_HEIGHT / 2;
+        vectorCircle(baseX, baseY, 15, {31, 31, 31});
+    }
+
+    void burstingObject(int beat, int progress) {
+        int numParticles = 5;
+        int time = progress + beat * 100;
+        int numBeats = 1;
+        //draw 5 small circles around a larger circle
+        int baseX = SCREEN_WIDTH / 2;
+        int baseY = SCREEN_HEIGHT / 2;
+        int particleRadius = 5;
+        int startRadius = 2;
+        int endRadius = 50;
+        int objStartRadius = 10;
+        int objEndRadius = 0;
+
+        int t = inverseLerp(0, numBeats * 100, time);
+        if (t >= 100) return;
+        int posRadius = lerp(startRadius, endRadius, t);
+        int rot = degreesToAngle(t * 180 / 100);
+        if (t > 70) particleRadius = 4;
+        if (t > 80) particleRadius = 3;
+        if (t > 90) particleRadius = 2;
+
+        int i;
+
+        for (i = 0; i < numParticles; i++) {
+            int angle = i * (BRAD_PI * 2 / numParticles);
+            int partX = (cosLerp(angle + rot) * (posRadius) ) >> 12;
+            int partY = (sinLerp(angle + rot) * (posRadius) ) >> 12;
+
+            vectorCircle(baseX + partX, baseY + partY, particleRadius, {31, 31, 31});
+        }
+
+        int objRadius = lerp(objStartRadius, objEndRadius, (t * t) / 100);
+        vectorCircle(baseX, baseY, objRadius, {31, 31, 31});
+
+
+    }
 };
 
 class ThrowableObject { //persists after animation is done, can be interacted with by pen

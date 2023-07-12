@@ -66,6 +66,15 @@ int main( int argc, char *argv[] )
 		//animator.sineWave(songPos.globalBeatProgress, songPos.globalBeat, 6, 2, true);
 		//animator.dancingStarfish(songPos.globalBeatProgress, songPos.globalBeat);
 		//animator.slidingStarfish({100,50}, {200, 100}, {30, 30}, songPos.globalBeatProgress, songPos.globalBeat);
+		//animator.shakingObject(songPos.globalBeat, songPos.globalBeatProgress);
+
+		if (songPos.globalBeat < 2) {
+			animator.shakingObject(songPos.globalBeat, songPos.globalBeatProgress);
+		} else {
+			if (songPos.globalBeat == 2 && songPos.globalBeatProgress < 20) animator.hitObject(songPos.globalBeatProgress);
+			else animator.burstingObject(songPos.globalBeat - 2, songPos.globalBeatProgress);
+		}
+		
 		
 
 		
@@ -83,12 +92,12 @@ int main( int argc, char *argv[] )
 		//animator.slidingStarfish({20, 20}, {100, 50}, {x, y}, songPos.globalBeatProgress, songPos.globalBeat);
 		//animator.colourChangeSlider(20, SCREEN_HEIGHT - 60, 60, {30, 15, 0}, {25, 0, 15}, {x, y});
 		//animator.slidingCircle({20, 20}, {100, 50}, {x, y});
-		animator.flyingBall(songPos.globalBeatProgress, songPos.globalBeat, {0, 50}, {200, 100}, 20);
+		//animator.flyingBall(songPos.globalBeatProgress, songPos.globalBeat, {0, 50}, {200, 100}, 20);
 		//throwObject.draw(frame, songPos.globalBeat, songPos.globalBeatProgress);
 
 
-		iprintf("\x1b[8;1Hbeat# %i", songPos.globalBeat);
-		iprintf("\x1b[11;1Hprogress# %i", songPos.globalBeatProgress);
+		iprintf("\x1b[8;1Hbeat# .%i.", songPos.globalBeat);
+		iprintf("\x1b[11;1Hprogress# .%i.", songPos.globalBeatProgress);
 		Vec2d norm = normalizeVec({0, 3});
 		
 
