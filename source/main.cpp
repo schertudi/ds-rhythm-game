@@ -35,7 +35,7 @@ int main( int argc, char *argv[] )
 	touchPosition touch;
 	TouchTracker touchTracker(0);
 	BeatManager beatManager(120, 2); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
-	RhythmPath path(audioManager);
+	RhythmPath path = RhythmPath();
 
 	Animator animator = Animator();
 	AnimationCommandManager animationCommandManager = AnimationCommandManager();

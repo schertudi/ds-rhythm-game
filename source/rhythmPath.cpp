@@ -33,9 +33,7 @@ class RhythmPath {
     private:
     int beatLookAhead = 2;
     int margin = 60; // if we are 10% close to beat or 10% past this is still correct
-    int combo = 0;
     bool isComputerPlaying = false;
-    AudioManager audioManager;
 
     
     //simple test
@@ -128,9 +126,8 @@ class RhythmPath {
     std::vector<BeatInteractable*> spawnedBeats;
 
     public:
-    RhythmPath(AudioManager _man) {
-        audioManager = _man;
-        audioManager.setOctave(OCT_5);
+    RhythmPath() {
+        
     }
    
     void OnBeat(songPosition pos) {
@@ -265,9 +262,6 @@ class RhythmPath {
 
     }
 
-    int getCombo() {
-        return combo;
-    }
    
 };
 
