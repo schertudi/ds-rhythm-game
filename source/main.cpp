@@ -11,7 +11,7 @@
 #include "animator.cpp"
 #include "vectorShapes.h"
 #include "mathHelpers.h"
-
+#include "animationCommand.cpp"
 
 
 int main( int argc, char *argv[] )
@@ -38,6 +38,9 @@ int main( int argc, char *argv[] )
 	RhythmPath path(audioManager);
 
 	Animator animator = Animator();
+	AnimationCommandManager animationCommandManager = AnimationCommandManager();
+
+	int combo = 0;
 	
 
 	//mmLoad( MOD_FLATOUTLIES );
@@ -46,7 +49,7 @@ int main( int argc, char *argv[] )
 
 	//
 
-	
+	/*
 	while (1) {
 		//draw fun animations........
 		scanKeys();
@@ -66,14 +69,14 @@ int main( int argc, char *argv[] )
 		//animator.slidingStarfish({100,50}, {200, 100}, {30, 30}, songPos.globalBeatProgress, songPos.globalBeat);
 		//animator.shakingObject(songPos.globalBeat, songPos.globalBeatProgress);
 
-		/*
-		if (songPos.globalBeat < 2) {
-			animator.shakingObject(songPos.globalBeat, songPos.globalBeatProgress);
-		} else {
-			if (songPos.globalBeat == 2 && songPos.globalBeatProgress < 20) animator.hitObject(songPos.globalBeatProgress);
-			else animator.burstingObject(songPos.globalBeat - 2, songPos.globalBeatProgress);
-		}
-		*/
+		
+		//if (songPos.globalBeat < 2) {
+		//	animator.shakingObject(songPos.globalBeat, songPos.globalBeatProgress);
+		//} else {
+		//	if (songPos.globalBeat == 2 && songPos.globalBeatProgress < 20) animator.hitObject(songPos.globalBeatProgress);
+		//	else animator.burstingObject(songPos.globalBeat - 2, songPos.globalBeatProgress);
+		//}
+		
 		
 		
 
@@ -87,7 +90,9 @@ int main( int argc, char *argv[] )
 		} else {
 		}
 
-		animator.slidingStarfish({20, 20}, {100, 50}, {x, y}, songPos.globalBeatProgress, songPos.globalBeat);
+		animationCommandManager.updateAnimations(songPos.globalBeat, songPos.globalBeatProgress);
+
+		//animator.slidingStarfish({20, 20}, {100, 50}, {x, y}, songPos.globalBeatProgress, songPos.globalBeat);
 		//animator.colourChangeSlider(20, SCREEN_HEIGHT - 60, 60, {30, 15, 0}, {25, 0, 15}, {x, y});
 		//animator.slidingCircle({20, 20}, {100, 50}, {x, y});
 		//animator.flyingBall(songPos.globalBeatProgress, songPos.globalBeat, {0, 50}, {200, 100}, 20);
@@ -103,7 +108,8 @@ int main( int argc, char *argv[] )
 		swiWaitForVBlank();
 	}
 
-/*
+	*/
+
 	while(1)
 	{
 		scanKeys();
@@ -138,24 +144,79 @@ int main( int argc, char *argv[] )
 			
 		}
 
+		//int hitState;
+		int penX = -100;
+		int penY = -100;
+
 		if(key & KEY_TOUCH) {
 			touchRead(&touch);
 
-			path.updateBeats(songPos, touch.px, touch.py);
+			penX = touch.px;
+			penY = touch.py;
+
+			//hitState = path.updateBeats(songPos, touch.px, touch.py);
 			
 			pointerEffect.basicCircle(touch.px, touch.py, songPos.globalBeatProgress);
 			touchTracker.logTouch(touch.px, touch.py);
 		} else {
-			path.updateBeats(songPos, -100, -100);
+			//hitState = path.updateBeats(songPos, -100, -100);
 			//pointerEffect.basicCircle(touch.px, touch.py, beatManager.getProgress());
 		}
+
+		//a tad inefficient but probably not worth optimising at this point
+		std::vector<playableBeatStatus> beatStates = path.getBeatStates(songPos, penX, penY);
+		for (size_t i = 0; i < beatStates.size(); i++) {
+			//spot early beat: beat hit but progress < 100
+			playableBeatStatus status = beatStates[i];
+			if (status.progress < 100 && status.isHit) {
+				combo = 0;
+				path.killBeat(status.beatStart);
+			}
+
+			if (status.isSlider) {
+				if (status.progress == 100 && status.isHit) { //starting beat, play sound (once)
+					path.tryPlaySound(status.beatStart, audioManager);
+				}
+				bool shouldBeHitting = status.progress > 100 && status.progress < 200;
+				if (shouldBeHitting && !status.isHit) { //let go of slider, so kill
+					combo = 0;
+					path.killBeat(status.beatStart);
+				}
+				if (status.progress == 200) { //end beat, play sound (once)
+					combo += 1;
+					path.resetSound(status.beatStart);
+					path.tryPlaySound(status.beatStart, audioManager);
+					path.killBeat(status.beatStart);
+				}
+			} else {
+				//check if hit singular beat on time
+				if (status.progress == 100 && status.isHit) {
+					combo += 1;
+					path.tryPlaySound(status.beatStart, audioManager);
+					path.killBeat(status.beatStart);
+				}
+			}
+
+			//late beat: not hit but passed its window
+			if (status.progress > 200) {
+				combo = 0;
+				path.killBeat(status.beatStart);
+			}
+		}
+
+		path.renderBeats(songPos);
+
+
 		touchTracker.deleteOldEntries();
+
+		//animationCommandManager.updateAnimations(songPos);
 		//touchTracker.drawTrail(frame);
 
 		consoleClear();
 		iprintf("\x1b[8;1Hbeat# %i", songPos.localBeat * songPos.numSubBeats + songPos.subBeat);
 		iprintf("\x1b[9;1Hbar# %i", songPos.bar);
-		iprintf("\x1b[10;1Hcombo %i", path.getCombo());
+		iprintf("\x1b[10;1Hcombo %i", combo);
+		//iprintf("\x1b[11;1Hhit .%i.", hitState);
 		
 		//iprintf("\x1b[8;1HglobalBeat# %i", songPos.globalBeat);
 		//iprintf("\x1b[9;1HlocalBeat# %i", songPos.localBeat);
@@ -166,7 +227,7 @@ int main( int argc, char *argv[] )
 		//iprintf("\x1b[14;1HsubProgress# %i", songPos.subBeatProgress);
 		//iprintf("\x1b[15;1HfineBeat# %i", songPos.localBeat * songPos.numSubBeats + songPos.subBeat);
 		//iprintf("\x1b[11;1Hcombo# %i", path.getCombo());
-		
+
 
 		glFlush(0);
 
@@ -175,7 +236,7 @@ int main( int argc, char *argv[] )
 		
 	}
 
-	*/
+	
 
 	return 0;
 	

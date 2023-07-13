@@ -36,11 +36,21 @@ class RhythmPath {
     int combo = 0;
     bool isComputerPlaying = false;
     AudioManager audioManager;
+
+    
+    //simple test
+    std::vector<beatEntry> bar1 = {
+        {0, 0, 20, 20, NOTE_C * OCT_3, QUART_BEAT},
+        {2, 2, 50, 20, NOTE_FS * OCT_3, QUART_BEAT}
+    };
+
+    std::vector<beatEntry> bar2 = {
+        {2, 6, 20, 20, NOTE_C * OCT_3, QUART_BEAT, 50, 20}
+    }; 
     
 
     //play rhythm, no pitch
-
-    
+    /*
     std::vector<beatEntry> bar1 = {
         {0, 0, 20, 20, NOTE_C * OCT_3, QUART_BEAT},
         {2, 2, 50, 20, NOTE_FS * OCT_3, QUART_BEAT},
@@ -74,6 +84,7 @@ class RhythmPath {
     std::vector<beatEntry> bar5 = {
         {0, 1, 20, 50, NOTE_F * OCT_3, QUART_BEAT}
     };
+    */
 
     
     
@@ -110,7 +121,7 @@ class RhythmPath {
     
 
     std::vector<std::vector<beatEntry>> beatMap = {
-        bar1, bar2, bar3, bar4
+        bar1, bar2
     };
 
 
@@ -128,78 +139,92 @@ class RhythmPath {
         trySpawnBeat(pos);
     }
 
-    void updateBeats(songPosition pos, int touchX, int touchY) {
+    /*
+    need a better way of finding status of beats, including whether or not they were hit on time.
+    this is too tightly coupled and we need the same logic to work in different objects
+    all this function basically does is go through each active beat, find what its progress is (yet to hit? ready to hit? past being hit? in slider?)
+    and then performs some game logic based on that. we want to remove the game logic and just provide information to figure out how to handle each beat.
+    struct with beat start time (this is unique), progress of that beat whether or not beat was hit (start note in case of slider).
+    if slider, we say whether or not pen is touching the right part (why are these 2 different functions)
+    isPenTouching() is current state as obj knows it , while isHit() checks and updates this value. so history. probably useful unless if can refactor enough (should do)
+    */
+
+    void renderBeats(songPosition pos) {
+        //rather than handling EVERYTHING (kills, music, combo) in here should probably try and get a status that other things can work with
         int beat = pos.globalBeat * pos.numSubBeats + pos.subBeat;
         int progressToNext = pos.subBeatProgress;
+
         for (size_t i = 0; i < spawnedBeats.size(); i++) {
             BeatInteractable* b = spawnedBeats[i];
             int p = b->getBeatProgress(beat, progressToNext, margin);
-            //b->render(p);
-            if (p >= 300) { //too late
-                incorrectHit(b);
-                continue;
-            }
-
-            if (isComputerPlaying && p == 100) { //on time so play beat
-                b->tryPlayNote(audioManager);
-            }
-
-            bool isHit;
-
-            //TODO fix godawful code
-            //basically kill slider if we are no longer touching it
-            if (b->isSlider()) {
-                bool oldIsPenTouching = b->isPenTouching();
-                isHit = b->isHit(touchX, touchY);
-                if (!b->isPenTouching() && oldIsPenTouching) { //slider no longer dragged
-                    incorrectHit(b);
-                    continue;
-                }
-            } else {
-                isHit = b->isHit(touchX, touchY);
-            }  
-
-            if (isHit) {
-                bool hitAtRightTime = b->isHitTime(beat, progressToNext, margin, touchX, touchY);
-
-                if (b->isSlider()) { //non-slider is killed instantly, a slider can only be killed here if hit too early
-                    if (!hitAtRightTime) {
-                        incorrectHit(b);
-                        continue;
-                    } else { //only count combo if you hold on to end... don't care about lifting at right time yet
-                        if (p == 200) {
-                            correctHit(b);
-                            continue;
-                        }
-                    }
-                } else {
-                    if (hitAtRightTime) {
-                        correctHit(b); //on time
-                    } else {
-                        incorrectHit(b); //too early
-                    }
-
-                    continue;
-                }
-                
-            }
             b->render(p);
         }
 
-        killMarkedBeats();
     }
 
-    void correctHit(BeatInteractable* b) {
-        combo += 1;
-        if (!isComputerPlaying) { //on time so play beat
-            b->tryPlayNote(audioManager);
+    std::vector<playableBeatStatus> getBeatStates(songPosition pos, int touchX, int touchY) {
+        std::vector<playableBeatStatus> states;
+
+        int beat = pos.globalBeat * pos.numSubBeats + pos.subBeat;
+        int progressToNext = pos.subBeatProgress;
+
+        for (size_t i = 0; i < spawnedBeats.size(); i++) {
+            BeatInteractable* b = spawnedBeats[i];
+            int p = b->getBeatProgress(beat, progressToNext, margin);
+            
+            bool isHit = b->isHit(touchX, touchY);
+
+            if (isHit) {
+                if (b->isSlider()) { //for slider a hit needs to be in the right place, not just anywhere along it
+                    bool rightPlace = b->isPenInRightPlace(beat, progressToNext, margin, touchX, touchY);
+                    if (!rightPlace) isHit = false;
+                } 
+            }
+
+            playableBeatStatus beatState;
+            beatState.beatStart = b->getStartBeat();
+            beatState.progress = p;
+            beatState.isHit = isHit;
+
+            if (b->isSlider()) {
+                //beatState.isReadyForHit = p >= 100 && p <= 200;
+                //beatState.isSliderReadyForLift = p == 200;
+                beatState.isSlider = true;
+            } else {
+                //beatState.isReadyForHit = p == 100;
+                beatState.isSlider = false;
+            }
+            
+            states.push_back(beatState);
         }
-        b->markForKill();
+
+        return states;
     }
 
-    void incorrectHit(BeatInteractable* b) {
-        b->markForKill();
-        combo = 0;
+    //TODO: better memory management for this
+    void killBeat(int beatStart) {
+        for (size_t i = 0; i < spawnedBeats.size(); i++) {
+            if (spawnedBeats[i]->getStartBeat() == beatStart) {
+                spawnedBeats.erase(spawnedBeats.begin() + i);
+                i--;
+            }
+        }
+    }
+
+    void tryPlaySound(int beatStart, AudioManager man) {
+        for (size_t i = 0; i < spawnedBeats.size(); i++) {
+            if (spawnedBeats[i]->getStartBeat() == beatStart) {
+                spawnedBeats[i]->tryPlaySound(man);
+            }
+        }
+    }
+
+    void resetSound(int beatStart) {
+        for (size_t i = 0; i < spawnedBeats.size(); i++) {
+            if (spawnedBeats[i]->getStartBeat() == beatStart) {
+                spawnedBeats[i]->resetSound();
+            }
+        }
     }
 
     void trySpawnBeat(songPosition pos) {
@@ -238,16 +263,6 @@ class RhythmPath {
             spawnedBeats.push_back(newBeat);
         }
 
-    }
-
-    void killMarkedBeats() {
-        //TODO fix memory leak
-        for (size_t i = 0; i < spawnedBeats.size(); i++) {
-            if (spawnedBeats[i]->isMarkedForKill()) {
-                spawnedBeats.erase(spawnedBeats.begin() + i);
-                i--;
-            }
-        }
     }
 
     int getCombo() {

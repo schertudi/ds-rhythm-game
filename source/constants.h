@@ -16,6 +16,15 @@ struct songPosition {
     int numSubBeats;
 };
 
+struct playableBeatStatus {
+    int beatStart;
+    int progress;
+    bool isReadyForHit; //if player should hit beat now
+    bool isHit; //pen is both down and in the right place
+    bool isSlider;
+    bool isSliderReadyForLift; //if at end of slider, player can lift pen but does not have to yet
+    bool isKilled;
+};
 
 #define NUM_SUBLAYERS 10
 #define ANIMATION_BG_LAYER 1 * NUM_SUBLAYERS

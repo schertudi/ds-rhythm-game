@@ -36,7 +36,7 @@ class AudioManager {
     }
 
     void startMusic() {
-        mmStart(MOD_TRACKING, MM_PLAY_ONCE);
+        //mmStart(MOD_TRACKING, MM_PLAY_ONCE);
     }
 
     void metronome(int beat) {

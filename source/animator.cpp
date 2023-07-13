@@ -12,6 +12,50 @@
 #include "constants.h"
 #include "mathHelpers.h"
 
+/*
+at the moment we have a bunch of self-contained functions that, given beat and progress, can animate one small thing.
+these animations can occur before being hit, on hit, anywhere on slide (in case of sliders) and after hit.
+we probably also want the option for fail animations on note miss.
+the way it is set up now, it's possible to make animation that persists across beats just by keeping inputs consistent
+eg can slide a circle from a to b, and then on next beat have animation of it bouncing from b to c.
+but do we want to simplify this to make modifications easier? perhaps having pre-defined patterns you can just plug inputs into.
+because the definition for beats is already going to be a little complex (defining animations at each part), might as well 
+    complicate it a little more but make it easier to reuse things.
+
+maybe we have classes for certain patterns, and those patterns can be customized using preset parameters. the ones we dont care about are kept internal.
+then we can have a certain pattern start at a certain beat.
+eg at beat 2, we play the throwBall pattern with slider length of 4 beats. slider goes from (x1, y1) to (x2, y2) and ball falls at (x3, y3).
+probably keep functions and classes separate so things can be reused nicely. the class is just for combining patterns.
+generic functionality - i guess we have identical logic for when different animations should be executed. 
+so all classes have a function for drawing on fail, and other parts of the game draw that based on beats and player input.
+
+i think this is a command pattern!
+sender/invoker - probably something like rhythmPath (idk)
+make a command interface, animationCommandInterface (-> interactiveAnimationCommandInterface, backgroundAnimationCommandInterface)
+concrete command - the specific patterns we want. call concreteAnimationCommand
+reciever - right now Animator - performs the animation functions
+client - this will be used to setup commands
+
+might want distinction between interactive/non-interactive commands, as we want some to trigger on user and some should just run in background
+
+
+for command in list:
+command.update(beat, progress)
+
+command.update():
+    #pick what function to run based on timings + user input
+
+command.status(beat, progress):
+    if startBeat > beat + 2 or beat + 2 > endBeat:
+        return "inactive"
+    if startBeat > beat:
+        return "before"
+    if beat > endBeat:
+        return "after"
+    return "on beat"
+
+*/
+
 
 class Animator {
 
@@ -305,12 +349,10 @@ class Animator {
         vectorRect(sliderPos.x - 10, sliderPos.y - 5, sliderPos.x + 10, sliderPos.y + 5, {5, 5, 5}, ANIMATION_FG_LAYER);
     }
 
-    void shakingObject(int beat, int progress) {
+    void shakingObject(int beat, int progress, int startBeat, int endBeat, Vec2d pos) {
+        beat -= startBeat;
         int time = progress + beat * 100;
-        int endBeat = 200;
-
-        int x = SCREEN_WIDTH / 2;
-        int y = SCREEN_HEIGHT / 2;
+        endBeat = (endBeat - startBeat) * 100;
 
         int numShakesInBeat = 2;
         int shakeWidth = 5; //move 5px at most
@@ -328,22 +370,19 @@ class Animator {
         if (t > 100) t = 100;
         int size = lerp(startSize, endSize, t);
 
-        vectorCircle(x + shakeX, y + shakeY, size, {31, 31, 31}, ANIMATION_FG_LAYER);
+        vectorCircle(pos.x + shakeX, pos.y + shakeY, size, {31, 31, 31}, ANIMATION_FG_LAYER);
     }
 
-    void hitObject(int progress) {
-        int baseX = SCREEN_WIDTH / 2;
-        int baseY = SCREEN_HEIGHT / 2;
-        vectorCircle(baseX, baseY, 17, {31, 31, 31}, ANIMATION_FG_LAYER);
+    void hitObject(Vec2d pos) {
+        vectorCircle(pos.x, pos.y, 17, {31, 31, 31}, ANIMATION_FG_LAYER);
     }
 
-    void burstingObject(int beat, int progress) {
+    void burstingObject(int beat, int progress, int startBeat, int endBeat, Vec2d pos) {
+        beat -= startBeat; //so 0 means we are at start of sequence
         int numParticles = 5;
         int time = progress + beat * 100;
-        int numBeats = 1;
+        int numBeats = endBeat - startBeat;
         //draw 5 small circles around a larger circle
-        int baseX = SCREEN_WIDTH / 2;
-        int baseY = SCREEN_HEIGHT / 2;
         int particleRadius = 5;
         int startRadius = 2;
         int endRadius = 50;
@@ -365,11 +404,11 @@ class Animator {
             int partX = (cosLerp(angle + rot) * (posRadius) ) >> 12;
             int partY = (sinLerp(angle + rot) * (posRadius) ) >> 12;
 
-            vectorCircle(baseX + partX, baseY + partY, particleRadius, {31, 31, 31}, ANIMATION_MG_LAYER);
+            vectorCircle(pos.x + partX, pos.y + partY, particleRadius, {31, 31, 31}, ANIMATION_MG_LAYER);
         }
 
         int objRadius = lerp(objStartRadius, objEndRadius, (t * t) / 100);
-        vectorCircle(baseX, baseY, objRadius, {31, 31, 31}, ANIMATION_FG_LAYER);
+        vectorCircle(pos.x, pos.y, objRadius, {31, 31, 31}, ANIMATION_FG_LAYER);
 
 
     }

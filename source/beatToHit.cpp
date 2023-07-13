@@ -12,6 +12,8 @@ class BeatInteractable {
     virtual void render(int progress) = 0; //<100 means approaching, 100 means at beat, >100 means passed
     virtual bool isHit(int touchX, int touchY) = 0;
     virtual int getHitBeat();
+    virtual int getStartBeat();
+    virtual int getEndBeat();
     virtual int getBeatProgress(int globalBeat, int progressToNext, int margin);
 
     int getRadiusByProgress(int progress) {
@@ -25,7 +27,7 @@ class BeatInteractable {
         return 10 - progress / 20;
     }
 
-    virtual bool isHitTime(int globalBeat, int progressToNext, int margin, int touchX, int touchY);
+    virtual bool isPenInRightPlace(int globalBeat, int progressToNext, int margin, int touchX, int touchY);
 
     void markForKill() {
         isDead = true;
@@ -51,7 +53,8 @@ class BeatInteractable {
         return _isPenTouching;
     } 
 
-    virtual void tryPlayNote(AudioManager man);
+    virtual void tryPlaySound(AudioManager man);
+    virtual void resetSound();
 };
 
 class BeatToHit : public BeatInteractable {
@@ -91,6 +94,14 @@ class BeatToHit : public BeatInteractable {
         return beat;
     }
 
+    int getStartBeat() override {
+        return beat;
+    }
+
+    int getEndBeat() override {
+        return beat;
+    }
+
     int getBeatProgress(int globalBeat, int progressToNext, int margin) {
         if (globalBeat < beat - 2) { //too soon
             return 0;
@@ -113,14 +124,18 @@ class BeatToHit : public BeatInteractable {
         }
     }
 
-    bool isHitTime(int globalBeat, int progressToNext, int margin, int touchX, int touchY) override {
-        return getBeatProgress(globalBeat, progressToNext, margin) == 100;
+    bool isPenInRightPlace(int globalBeat, int progressToNext, int margin, int touchX, int touchY) override { 
+        return true;
     }
 
-    void tryPlayNote(AudioManager man) {
+    void tryPlaySound(AudioManager man) override {
         if (hasNotePlayed) return;
         man.playNote(length, pitch);
         hasNotePlayed = true;
+    }
+
+    void resetSound() override {
+        hasNotePlayed = false;
     }
 
 
@@ -205,6 +220,14 @@ class BeatToSlide : public BeatInteractable {
         return endBeat;
     }
 
+    int getStartBeat() override {
+        return startBeat;
+    }
+
+    int getEndBeat() override {
+        return endBeat;
+    }
+
     int getBeatProgress(int globalBeat, int progressToNext, int margin) {
         //0: no movement. 0-99: about to hit beat. 100: hit start. 101-199: in middle of slide. 200: hit end. 200+: missed.
         //in a slider, you want to hit at start and lift at end.
@@ -231,7 +254,7 @@ class BeatToSlide : public BeatInteractable {
             return 100 + (progressToNext / lengthInBeats); //consider this in middle of slide, needs to be calibrated for multi-beat slides
         }
         if (globalBeat > startBeat && globalBeat < endBeat) { //in middle of slide
-            if (globalBeat == endBeat - 1 && progressToNext > 100 - margin) { 
+            if (globalBeat == endBeat - 1 && progressToNext > 100 - 0) {  //0 should be margin but rn dont care if not lifted in time and early 200 causes slight issues
                 return 200;
             }
             int past = (100 / lengthInBeats) * (globalBeat - startBeat + 0);
@@ -249,7 +272,7 @@ class BeatToSlide : public BeatInteractable {
         return 300;
     }
 
-    bool isHitTime(int globalBeat, int progressToNext, int margin, int touchX, int touchY) override {
+    bool isPenInRightPlace(int globalBeat, int progressToNext, int margin, int touchX, int touchY) override {
         int p = getBeatProgress(globalBeat, progressToNext, margin);
         //touchX depends on p; lerp between start and end
         //int targetX, targetY;
@@ -278,16 +301,20 @@ class BeatToSlide : public BeatInteractable {
             int allowedRadius = 30; //must be within 10px radius of target
 
             //now check if pen in this allowed circle
-            return true;
+            //return true;
             return touchX > midX - allowedRadius && touchX < midX + allowedRadius 
                 && touchY > midY - allowedRadius && touchY < midY + allowedRadius;
         } 
         return false; // too late
     }
 
-    void tryPlayNote(AudioManager man) {
+    void tryPlaySound(AudioManager man) {
         if (hasNotePlayed) return;
         man.playNote(noteLength, pitch);
         hasNotePlayed = true;
+    }
+
+    void resetSound() override {
+        hasNotePlayed = false;
     }
 };
