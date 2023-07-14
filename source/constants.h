@@ -14,16 +14,14 @@ struct songPosition {
     int globalBeatProgress; //used for animations
     int subBeatProgress; //used for calculating timings
     int numSubBeats;
+    int numBeatsInBar;
 };
 
 struct playableBeatStatus {
     int beatStart;
     int progress;
-    bool isReadyForHit; //if player should hit beat now
     bool isHit; //pen is both down and in the right place
     bool isSlider;
-    bool isSliderReadyForLift; //if at end of slider, player can lift pen but does not have to yet
-    bool isKilled;
 };
 
 #define NUM_SUBLAYERS 10

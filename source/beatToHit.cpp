@@ -18,13 +18,13 @@ class BeatInteractable {
 
     int getRadiusByProgress(int progress) {
         if (progress < 0) {
-            return 10;
+            return 7;
         }
         if (progress == 100) return 5;
         if (progress > 100) {
             return 2;
         }
-        return 10 - progress / 20;
+        return 7 - progress / 20;
     }
 
     virtual bool isPenInRightPlace(int globalBeat, int progressToNext, int margin, int touchX, int touchY);
@@ -80,7 +80,7 @@ class BeatToHit : public BeatInteractable {
 
     void render(int progress) override {
         int r = getRadiusByProgress(progress);
-        vectorCircle(x, y, r, {31, 31, 31}, BEATPATH_LAYER);
+        vectorCircle(x, y, r, {31, 10, 31}, BEATPATH_LAYER);
     }
 
     bool isHit(int touchX, int touchY) override {

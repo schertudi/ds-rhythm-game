@@ -355,12 +355,13 @@ class Animator {
         endBeat = (endBeat - startBeat) * 100;
 
         int numShakesInBeat = 2;
-        int shakeWidth = 5; //move 5px at most
+        int shakeWidth = 6; //move 6px at most
 
         int shakeX = progress % (100 / numShakesInBeat); 
         int t = inverseLerp(0, (100 / numShakesInBeat), shakeX);
         shakeX = lerp(0, shakeWidth * 2, t);
         if (shakeX > shakeWidth) shakeX = shakeWidth * 2 - shakeX;
+        shakeX -= shakeWidth / 2;
         
         int shakeY = sinLerp(progress * 600) / 1500;
 
@@ -377,20 +378,26 @@ class Animator {
         vectorCircle(pos.x, pos.y, 17, {31, 31, 31}, ANIMATION_FG_LAYER);
     }
 
-    void burstingObject(int beat, int progress, int startBeat, int endBeat, Vec2d pos) {
+    void burstingObject(int beat, int progress, int startBeat, int endBeat, int offset, Vec2d pos) {
         beat -= startBeat; //so 0 means we are at start of sequence
         int numParticles = 5;
         int time = progress + beat * 100;
         int numBeats = endBeat - startBeat;
         //draw 5 small circles around a larger circle
         int particleRadius = 5;
-        int startRadius = 2;
+        int startRadius = 7;
         int endRadius = 50;
         int objStartRadius = 10;
         int objEndRadius = 0;
 
-        int t = inverseLerp(0, numBeats * 100, time);
+        //assuming numBeats = 1:
+        //offset -50 means we go from time=-50 to time=50
+        //offset 0 means we go from time=0 to time=100
+        //offset 50 means we go from time=50 to time=150
+
+        int t = inverseLerp(0, numBeats * 100, time - offset);
         if (t >= 100) return;
+        if (t < 0) t = 0;
         int posRadius = lerp(startRadius, endRadius, t);
         int rot = degreesToAngle(t * 180 / 100);
         if (t > 70) particleRadius = 4;

@@ -35,6 +35,7 @@ int main( int argc, char *argv[] )
 	touchPosition touch;
 	TouchTracker touchTracker(0);
 	BeatManager beatManager(120, 2); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
+	//it also goes insane with a bpm like (70, 2).
 	RhythmPath path = RhythmPath();
 
 	Animator animator = Animator();
@@ -209,14 +210,24 @@ int main( int argc, char *argv[] )
 
 		touchTracker.deleteOldEntries();
 
-		//animationCommandManager.updateAnimations(songPos);
+		animationCommandManager.updateInteractiveAnimations(songPos, beatStates);
 		//touchTracker.drawTrail(frame);
 
+		playableBeatStatus myStatus;
+        myStatus.beatStart = -1; 
+        for (size_t i = 0; i < beatStates.size(); i++) {
+            if (beatStates[i].beatStart == 0) {
+                myStatus = beatStates[i];
+            }
+        }
+
 		consoleClear();
-		iprintf("\x1b[8;1Hbeat# %i", songPos.localBeat * songPos.numSubBeats + songPos.subBeat);
+		int fineBeat = songPos.globalBeat * songPos.numSubBeats + songPos.subBeat;
+		iprintf("\x1b[8;1Htime .%i.", fineBeat * 100 + songPos.subBeatProgress);
 		iprintf("\x1b[9;1Hbar# %i", songPos.bar);
 		iprintf("\x1b[10;1Hcombo %i", combo);
-		//iprintf("\x1b[11;1Hhit .%i.", hitState);
+		iprintf("\x1b[11;1Hstate0 .%i.", myStatus.isHit);
+		iprintf("\x1b[12;1Hoffset .%i.", animationCommandManager.getOffset());
 		
 		//iprintf("\x1b[8;1HglobalBeat# %i", songPos.globalBeat);
 		//iprintf("\x1b[9;1HlocalBeat# %i", songPos.localBeat);

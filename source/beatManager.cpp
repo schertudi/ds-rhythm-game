@@ -15,6 +15,7 @@ class BeatManager {
     int progress; //0-100 depending on how close to next beat we are
     int subProgress;
     int numSubBeats;
+    int numBeatsInBar;
 
     /*
     there are three types of beats
@@ -29,13 +30,14 @@ class BeatManager {
 
     public:
     BeatManager(int b, int sub) {
-        globalBeat = -2;
+        globalBeat = -3;
         bpm = b;
         subBpm = b * sub;
         progress = 0;
         numSubBeats = sub;
         subBeat = 0;
         subProgress = 0;
+        numBeatsInBar = 4;
     }
 
     int updateBeat(int frame) {
@@ -78,7 +80,12 @@ class BeatManager {
     }
 
     songPosition getSongPosition() {
-        songPosition pos = {globalBeat, getLocalBeat(), subBeat, getBar(), progress, subProgress, numSubBeats};
+        songPosition pos = {globalBeat, getLocalBeat(globalBeat), subBeat, getBar(globalBeat), progress, subProgress, numSubBeats, numBeatsInBar};
+        return pos;
+    }
+
+    songPosition calculateSongPositionFromBeat(int _globalBeat) {
+        songPosition pos = {_globalBeat, getLocalBeat(_globalBeat), subBeat, getBar(_globalBeat), progress, subProgress, numSubBeats, numBeatsInBar};
         return pos;
     }
 
@@ -88,12 +95,12 @@ class BeatManager {
         return globalBeat;
     }
 
-    int getLocalBeat() {
-        return (globalBeat) % 4;
+    int getLocalBeat(int _globalBeat) {
+        return (_globalBeat) % numBeatsInBar;
     }
 
-    int getBar() {
-        return (globalBeat) / 4;
+    int getBar(int _globalBeat) {
+        return (globalBeat) / numBeatsInBar;
     }
 
     int getProgress() {

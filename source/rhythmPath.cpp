@@ -10,6 +10,7 @@
 #include "audioManager.cpp"
 #include "constants.h"
 #include "noteDefinitions.h"
+#include "vectorShapes.h"
 
 
 
@@ -39,7 +40,8 @@ class RhythmPath {
     //simple test
     std::vector<beatEntry> bar1 = {
         {0, 0, 20, 20, NOTE_C * OCT_3, QUART_BEAT},
-        {2, 2, 50, 20, NOTE_FS * OCT_3, QUART_BEAT}
+        {2, 2, 50, 20, NOTE_FS * OCT_3, QUART_BEAT},
+        {4, 4, 80, 20, NOTE_FS * OCT_3, QUART_BEAT}
     };
 
     std::vector<beatEntry> bar2 = {
@@ -119,7 +121,7 @@ class RhythmPath {
     
 
     std::vector<std::vector<beatEntry>> beatMap = {
-        bar1, bar2
+        bar1
     };
 
 
@@ -153,6 +155,13 @@ class RhythmPath {
 
         for (size_t i = 0; i < spawnedBeats.size(); i++) {
             BeatInteractable* b = spawnedBeats[i];
+
+            //if (pos.globalBeat < b->getStartBeat()) {
+            //    vectorCircle(50, 50, 5, {31, 31, 31}, 0);
+            //} else {
+            //    vectorCircle(50, 50, 15, {31, 31, 31}, 0);
+            //}
+
             int p = b->getBeatProgress(beat, progressToNext, margin);
             b->render(p);
         }
@@ -163,7 +172,9 @@ class RhythmPath {
         std::vector<playableBeatStatus> states;
 
         int beat = pos.globalBeat * pos.numSubBeats + pos.subBeat;
+        //int beat = pos.globalBeat;
         int progressToNext = pos.subBeatProgress;
+        //int progressToNext = pos.globalBeatProgress;
 
         for (size_t i = 0; i < spawnedBeats.size(); i++) {
             BeatInteractable* b = spawnedBeats[i];
@@ -184,11 +195,8 @@ class RhythmPath {
             beatState.isHit = isHit;
 
             if (b->isSlider()) {
-                //beatState.isReadyForHit = p >= 100 && p <= 200;
-                //beatState.isSliderReadyForLift = p == 200;
                 beatState.isSlider = true;
             } else {
-                //beatState.isReadyForHit = p == 100;
                 beatState.isSlider = false;
             }
             
@@ -200,6 +208,7 @@ class RhythmPath {
 
     //TODO: better memory management for this
     void killBeat(int beatStart) {
+        //return;
         for (size_t i = 0; i < spawnedBeats.size(); i++) {
             if (spawnedBeats[i]->getStartBeat() == beatStart) {
                 spawnedBeats.erase(spawnedBeats.begin() + i);
@@ -224,10 +233,17 @@ class RhythmPath {
         }
     }
 
+    int localToGlobalBeat(int localBeat, songPosition pos) {
+        int localToGlobal = localBeat + pos.bar * pos.numBeatsInBar * pos.numSubBeats;
+        return localToGlobal;
+    }
+    //a beat starting at beat n should be spawned at beat n - beatLookAhead. if this < 0 then beatManager needs to lower its starting beat.
     void trySpawnBeat(songPosition pos) {
         int bar = pos.bar;
-        int localBeat = pos.localBeat * pos.numSubBeats + pos.subBeat;
-        int globalBeat = pos.globalBeat * pos.numSubBeats + pos.subBeat + beatLookAhead * pos.numSubBeats;
+        //int localBeat = pos.localBeat * pos.numSubBeats + pos.subBeat;
+        //int localBeat = pos.localBeat + 2;
+        int globalBeat = (pos.globalBeat + beatLookAhead) * pos.numSubBeats + pos.subBeat;
+        //int globalBeat = pos.globalBeat + 2;
 
         if (bar >= (int)beatMap.size()) {
             return;
@@ -236,7 +252,7 @@ class RhythmPath {
 
         int index = -1;
         for (size_t i = 0; i < beats.size(); i++) {
-            if (beats[i].beatStart == localBeat) {
+            if (localToGlobalBeat(beats[i].beatStart, pos) == globalBeat) {
                 index = i;
                 break;
             }
@@ -246,7 +262,7 @@ class RhythmPath {
             return;
         }
 
-        if (beats[index].beatEnd == localBeat) {
+        if (beats[index].beatEnd == beats[index].beatStart) {
             //std::cout << "spawn beat global " << globalBeat << " beat " << beat << " bar " << bar << std::endl;
 
             // spawn beat
