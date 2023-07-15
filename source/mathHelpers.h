@@ -38,4 +38,6 @@ std::tuple<int, int, int> findQuadraticEquationFromPoints(int x1, int y1, int m1
 
 Vec2d threePointBezier(Vec2d start, Vec2d control, Vec2d end, int t);
 
+int convertBeatToTime(int beat, int progress);
+
 #endif

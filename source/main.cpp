@@ -38,6 +38,7 @@ int main( int argc, char *argv[] )
 	RhythmPath path = RhythmPath(2, 60);
 
 	AnimationCommandManager animationCommandManager = AnimationCommandManager();
+	Animator animator = Animator();
 
 	int combo = 0;
 	
@@ -219,7 +220,8 @@ int main( int argc, char *argv[] )
 
 		touchTracker.deleteOldEntries();
 
-		//animationCommandManager.updateInteractiveAnimations(songPos, beatStates);
+		animationCommandManager.updateInteractiveAnimations(songPos, beatStates, {penX, penY});
+		//animator.bouncingBallDiagonal(songPos.globalBeatProgress, songPos.globalBeat);
 		//touchTracker.drawTrail(frame);
 
 

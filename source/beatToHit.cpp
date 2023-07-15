@@ -151,15 +151,15 @@ class BeatToSlide : public BeatInteractable {
     }
 
     void render(int progress) override {
-        int bigRadius = 10;
-        int smallRadius = 5;
-        vectorCircle(endX, endY, bigRadius, {31, 31, 31}, BEATPATH_LAYER - 1);
+        int bigRadius = 7;
+        int smallRadius = 3;
+        vectorCircle(endX, endY, bigRadius, {20, 20, 20}, BEATPATH_LAYER - 1);
         
         if (progress < 100) {
             int r = lerp(bigRadius, smallRadius, progress);
             vectorCircle(startX, startY, r, {15, 15, 31}, BEATPATH_LAYER + 1);
             
-            vectorThickLine(startX, startY, endX, endY, bigRadius, {31, 31, 31}, BEATPATH_LAYER, false);
+            vectorThickLine(startX, startY, endX, endY, bigRadius, {20, 20, 20}, BEATPATH_LAYER, false);
         } else if (progress <= 200) {
             int lerpPos = progress - 100; //so 0 if at start of slide and 100 if at end of slide
             if (lerpPos < 0) lerpPos = 0;
@@ -170,7 +170,7 @@ class BeatToSlide : public BeatInteractable {
             if (progress == 100) { vectorCircle(startX, startY, smallRadius, {15, 15, 31}, BEATPATH_LAYER); }
             vectorThickLine(startX, startY, targetX, targetY, smallRadius, {15, 15, 31}, BEATPATH_LAYER, false);
             
-            vectorThickLine(targetX, targetY, endX, endY, bigRadius, {31, 31, 31}, BEATPATH_LAYER, false);
+            vectorThickLine(targetX, targetY, endX, endY, bigRadius, {20, 20, 20}, BEATPATH_LAYER, false);
             vectorCircle(targetX, targetY, smallRadius, {10, 10, 25}, BEATPATH_LAYER + 2);
         } 
         

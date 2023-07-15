@@ -95,7 +95,7 @@ class Animator {
         vectorCircle(x, y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
     }
 
-    void bouncingBallDiagonal(int progress, int beat) { //beat 0 start and then we offset from there
+    void bouncingBallDiagonal2(int progress, int beat) { //beat 0 start and then we offset from there
         Vec2d start = {20, 100};
         Vec2d hit = {50, 80};
         Vec2d end = {80, 100};
@@ -125,6 +125,46 @@ class Animator {
             
             x = lerp(hit.x, end.x, prog);
             y = lerp(hit.y, end.y, prog);
+        }
+
+        vectorCircle(x, y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
+    }
+
+    void bouncingBallDiagonal(int startTime, int endTime, int currTime, Vec2d startPos, Vec2d endPos, int height) { //beat 0 start and then we offset from there
+        //Vec2d start = {20, 100};
+        //Vec2d hit = {50, 80};
+        //Vec2d end = {80, 100};
+        Vec2d middlePos = { (startPos.x + endPos.x) / 2, (startPos.y + endPos.y) / 2 - height };
+        int t = inverseLerp(startTime, endTime, currTime);
+        if (t > 100) t = 100;
+        if (t < 0) t = 0;
+        //int xOffset = beat * (end.x - start.x);
+        int xOffset = 0; //used for later beats, but keeping it individual for now
+        startPos.x += xOffset;
+        middlePos.x += xOffset;
+        endPos.x += xOffset;
+
+        int prog = 0;
+        int x, y;
+        if (t < 50) {
+            //0 maps to 0, 50 maps to 100
+            prog = t * 2;
+            //want speedup when closer to 0
+            int p = 100 - prog;
+            p = ((p * p / 10) + (p * 10)) / 20;
+            prog = 100 - p;
+
+            x = lerp(startPos.x, middlePos.x, prog);
+            y = lerp(startPos.y, middlePos.y, prog);
+            
+        } else {
+            //have values in range of 50 to 100, want to flip it so 50 maps to 100 and 100 maps to 0
+            prog = (t - 50) * 2;
+            //speedup when closest to 100
+            prog = prog * prog / 100;
+            
+            x = lerp(middlePos.x, endPos.x, prog);
+            y = lerp(middlePos.y, endPos.y, prog);
         }
 
         vectorCircle(x, y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
@@ -274,7 +314,7 @@ class Animator {
         glEnd2D();
     }
 
-    void slidingStarfish(Vec2d start, Vec2d end, Vec2d penPos, int progress, int beat) {
+    void slidingStarfish(int beat, int progress, Vec2d start, Vec2d end, Vec2d penPos) {
         Vec2d lineDir = {end.x - start.x, end.y - start.y};
         lineDir = normalizeVec(lineDir);
 
@@ -305,21 +345,18 @@ class Animator {
         vectorCircle(circlePos.x, circlePos.y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
     }
 
-    void flyingBall(int progress, int beat, Vec2d start, Vec2d end, int elevation) {
-
-        Vec2d peak = {(start.x + end.x) / 2, start.y - elevation}; //highest point; gradient = 0
+    void flyingBall(int startTime, int endTime, int currTime, Vec2d startPos, Vec2d endPos, int elevation) {
+        Vec2d peak = {(startPos.x + endPos.x) / 2, startPos.y - elevation}; //highest point; gradient = 0
         
         //calc middle control point - https://stackoverflow.com/questions/22237780/how-to-model-quadratic-equation-using-a-bezier-curve-calculate-control-point
-        int midX = 2*peak.x -start.x/2 -end.x/2;
-        int midY = 2*peak.y -start.y/2 -end.y/2;
-
-        int time = progress + beat * 100;
-        int endBeat = 200;
+        int midX = 2*peak.x -startPos.x/2 -endPos.x/2;
+        int midY = 2*peak.y -startPos.y/2 -endPos.y/2;
+  
         //lerp time to fit in range of startX to endX
-        int t = inverseLerp(0, endBeat, time);
+        int t = inverseLerp(startTime, endTime, currTime);
         if (t > 100) t = 100;
 
-        Vec2d point = threePointBezier(start, {midX, midY}, end, t);
+        Vec2d point = threePointBezier(startPos, {midX, midY}, endPos, t);
         //vectorCircle(start.x, start.y, 5, {10, 31, 31});
         //vectorCircle(end.x, end.y, 5, {31, 31, 10});
         vectorCircle(point.x, point.y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);

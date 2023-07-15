@@ -179,3 +179,7 @@ Vec2d threePointBezier(Vec2d start, Vec2d control, Vec2d end, int t) {
     int y = (start.y * (100 - t) * (100 - t) + 2 * control.y * t * (100 - t) + end.y * t * t) / 10000;
     return {x, y};
 }
+
+int convertBeatToTime(int beat, int progress) {
+    return beat * 100 + progress;
+}
