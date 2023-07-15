@@ -1,36 +1,27 @@
 #include "vectorShapes.h"
 #include "audioManager.cpp"
 #include "constants.h"
+#include "mathHelpers.h"
 
 class BeatInteractable {
     private:
-    
-    bool _isPenTouching = false;
     bool _isSlider = false;
     playerStatus playerState = playerStatus::IDLE;
     int timeAtDeactivate;
     bool isDead = false;
 
-    public:
-    virtual void render(int progress) = 0; //<100 means approaching, 100 means at beat, >100 means passed
-    virtual bool isHit(int touchX, int touchY) = 0;
-    virtual int getHitBeat();
-    virtual int getStartBeat();
-    virtual int getEndBeat();
-    virtual int getBeatProgress(int globalBeat, int progressToNext, int margin);
-
-    int getRadiusByProgress(int progress) {
-        if (progress < 0) {
-            return 7;
-        }
-        if (progress == 100) return 5;
-        if (progress > 100) {
-            return 2;
-        }
-        return 7 - progress / 20;
+    protected:
+    void setSlider(bool value) {
+        _isSlider = value;
     }
 
-    virtual bool isPenInRightPlace(int globalBeat, int progressToNext, int margin, int touchX, int touchY);
+    public:
+    virtual void render(int progress) = 0; //<100 means approaching, 100 means at beat, >100 means passed
+    virtual bool isHit(int touchX, int touchY, int globalBeat, int progressToNext, int margin) = 0;
+    virtual int getStartBeat() = 0;
+    virtual int getEndBeat() = 0; //unused.. for now?
+    virtual int getBeatProgress(int globalBeat, int progressToNext, int margin) = 0;
+    virtual void playSound(AudioManager man) = 0;
 
     void deactivate(int beat) {
         timeAtDeactivate = beat;
@@ -46,23 +37,9 @@ class BeatInteractable {
         return beat - timeAtDeactivate;
     }
 
-    void setSlider(bool value) {
-        _isSlider = value;
-    }
-
     bool isSlider() const {
         return _isSlider;
     } 
-
-    void setIsPenTouching(bool value) {
-        _isPenTouching = value;
-    }
-
-    bool isPenTouching() const {
-        return _isPenTouching;
-    } 
-
-    virtual void playSound(AudioManager man);
 
     void setPlayerState(playerStatus state) {
         playerState = state;
@@ -74,7 +51,7 @@ class BeatInteractable {
 };
 
 class BeatToHit : public BeatInteractable {
-    public:
+    private:
     int beat;
     int x;
     int y;
@@ -82,7 +59,7 @@ class BeatToHit : public BeatInteractable {
     int length;
     int pitch;
     
-
+    public:
     BeatToHit(int _beat, int _x, int _y, int _len, int _pitch) {
         beat = _beat;
         x = _x;
@@ -94,21 +71,19 @@ class BeatToHit : public BeatInteractable {
     }
 
     void render(int progress) override {
-        int r = getRadiusByProgress(progress);
+        int r;
+        if (progress < 0) { r = 7; }
+        else if (progress == 100) { r = 5; }
+        else if (progress > 100) { r = 2; }
+        else r = 7 - progress / 20;
+
         int a = 20;
         if (progress == 100) a = 31;
         vectorCircle(x, y, r, {a, 20, 20}, BEATPATH_LAYER);
     }
 
-    bool isHit(int touchX, int touchY) override {
-        if (touchX > x - radius && touchX < x + radius && touchY > y - radius && touchY < y + radius) {
-            return true;
-        }
-        return false;
-    }
-
-    int getHitBeat() override {
-        return beat;
+    bool isHit(int touchX, int touchY, int globalBeat, int progressToNext, int margin) override {
+        return touchX > x - radius && touchX < x + radius && touchY > y - radius && touchY < y + radius;
     }
 
     int getStartBeat() override {
@@ -141,10 +116,6 @@ class BeatToHit : public BeatInteractable {
         }
     }
 
-    bool isPenInRightPlace(int globalBeat, int progressToNext, int margin, int touchX, int touchY) override { 
-        return true;
-    }
-
     void playSound(AudioManager man) override {
         man.playNote(length, pitch);
     }
@@ -152,7 +123,7 @@ class BeatToHit : public BeatInteractable {
 };
 
 class BeatToSlide : public BeatInteractable {
-    public:
+    private:
     int startBeat;
     int endBeat;
     int startX;
@@ -164,7 +135,7 @@ class BeatToSlide : public BeatInteractable {
     int noteLength;
     int pitch;
     
-
+    public:
     BeatToSlide(int _startBeat, int _endBeat, int _startX, int _startY, int _endX, int _endY, int _len, int _pitch) {
         startBeat = _startBeat;
         endBeat = _endBeat;
@@ -180,53 +151,47 @@ class BeatToSlide : public BeatInteractable {
     }
 
     void render(int progress) override {
-        int r = 10;
-        vectorCircle(endX, endY, r, {31, 31, 31}, BEATPATH_LAYER);
+        int bigRadius = 10;
+        int smallRadius = 5;
+        vectorCircle(endX, endY, bigRadius, {31, 31, 31}, BEATPATH_LAYER - 1);
         
         if (progress < 100) {
+            int r = lerp(bigRadius, smallRadius, progress);
+            vectorCircle(startX, startY, r, {15, 15, 31}, BEATPATH_LAYER + 1);
             
-            r = 10 - progress / 20;
-            vectorCircle(startX, startY, r, {31, 31, 31}, BEATPATH_LAYER);
-
-            r = 10;
-            vectorRect(startX, startY - r, endX, endY + r, {31, 31, 31}, BEATPATH_LAYER);
+            vectorThickLine(startX, startY, endX, endY, bigRadius, {31, 31, 31}, BEATPATH_LAYER, false);
         } else if (progress <= 200) {
-            int r1 = 5;
-            int r2 = 10;
-            int midX = startX + (endX - startX) * (progress - 100) / 100;
-
-            /*
             int lerpPos = progress - 100; //so 0 if at start of slide and 100 if at end of slide
             if (lerpPos < 0) lerpPos = 0;
             if (lerpPos > 100) lerpPos = 100;
             int targetX = lerp(startX, endX, lerpPos);
             int targetY = lerp(startY, endY, lerpPos);
-            */
-
-            //int midY = (startY + endY) * (progress - 100) / 100;
-            if (progress == 100) vectorCircle(startX, startY, r1, {15, 15, 31}, BEATPATH_LAYER);
-            vectorRect(startX, startY - r1, midX, endY + r1, {15, 15, 31}, BEATPATH_LAYER);
-            vectorRect(midX, startY - r2, endX, endY + r2, {31, 31, 31}, BEATPATH_LAYER);
-        } else {
-            r = 10;
             
-        }
-
+            if (progress == 100) { vectorCircle(startX, startY, smallRadius, {15, 15, 31}, BEATPATH_LAYER); }
+            vectorThickLine(startX, startY, targetX, targetY, smallRadius, {15, 15, 31}, BEATPATH_LAYER, false);
+            
+            vectorThickLine(targetX, targetY, endX, endY, bigRadius, {31, 31, 31}, BEATPATH_LAYER, false);
+            vectorCircle(targetX, targetY, smallRadius, {10, 10, 25}, BEATPATH_LAYER + 2);
+        } 
         
     }
 
-    bool isHit(int touchX, int touchY) override {
-        //we check using box from circle 1 to circle 2
-        if (touchX > startX - radius && touchX < endX + radius && touchY > startY - radius && touchY < endY + radius) {
-            setIsPenTouching(true);
-            return true;
-        }
-        setIsPenTouching(false);
-        return false;
-    }
+    bool isHit(int touchX, int touchY, int globalBeat, int progressToNext, int margin) override {
+        int p = getBeatProgress(globalBeat, progressToNext, margin);
+        int allowedRadius = 30; //must be within this much dist of target
 
-    int getHitBeat() override {
-        return endBeat;
+        if (p < 100) {
+            return touchX > startX - allowedRadius && touchX < startX + allowedRadius 
+                && touchY > startY - allowedRadius && touchY < startY + allowedRadius;
+        } else if (p <= 200) {
+            int midX = startX + (endX - startX) * (p - 100) / 100;
+            int midY = startY + (endY - startY) * (p - 100) / 100;
+            
+            return touchX > midX - allowedRadius && touchX < midX + allowedRadius 
+                && touchY > midY - allowedRadius && touchY < midY + allowedRadius;
+        } 
+        return touchX > endX - allowedRadius && touchX < endX + allowedRadius 
+            && touchY > endY - allowedRadius && touchY < endY + allowedRadius;
     }
 
     int getStartBeat() override {
@@ -237,7 +202,7 @@ class BeatToSlide : public BeatInteractable {
         return endBeat;
     }
 
-    int getBeatProgress(int globalBeat, int progressToNext, int margin) {
+    int getBeatProgress(int globalBeat, int progressToNext, int margin) override {
         //0: no movement. 0-99: about to hit beat. 100: hit start. 101-199: in middle of slide. 200: hit end. 200+: missed.
         //in a slider, you want to hit at start and lift at end.
         if (globalBeat < startBeat - 2) { //too soon
@@ -279,45 +244,6 @@ class BeatToSlide : public BeatInteractable {
             return 300;
         }
         return 300;
-    }
-
-    bool isPenInRightPlace(int globalBeat, int progressToNext, int margin, int touchX, int touchY) override {
-        int p = getBeatProgress(globalBeat, progressToNext, margin);
-        int allowedRadius = 30; //must be within 10px radius of target
-        //touchX depends on p; lerp between start and end
-        //int targetX, targetY;
-        if (p < 100) {
-            return touchX > startX - allowedRadius && touchX < startX + allowedRadius 
-                && touchY > startY - allowedRadius && touchY < startY + allowedRadius;
-        } else if (p <= 200) {
-            int midX = startX + (endX - startX) * (p - 100) / 100;
-            int midY = startY + (endY - startY) * (p - 100) / 100;
-
-            //TODO why the fuck does lerp not work??
-            /*
-            int lerpPos = p - 100; //so 0 if at start of slide and 100 if at end of slide
-            targetX = lerp(startX, endX, lerpPos);
-            targetY = lerp(startY, endY, lerpPos);
-            */
-
-            //vectorCircle(midX, targetY, 10, {31, 0, 0});
-
-            /*
-            int minLerp = lerpPos - margin; //the mouse is allowed to lag behind by margin, so if margin = 5 then we can be 5% behind
-            if (minLerp < 0) minLerp = 0;
-
-            int minX = lerp(startX, endX, minLerp);
-            int minY = lerp(startY, endY, minLerp);
-            */
-            
-
-            //now check if pen in this allowed circle
-            //return true;
-            return touchX > midX - allowedRadius && touchX < midX + allowedRadius 
-                && touchY > midY - allowedRadius && touchY < midY + allowedRadius;
-        } 
-        return touchX > endX - allowedRadius && touchX < endX + allowedRadius 
-            && touchY > endY - allowedRadius && touchY < endY + allowedRadius;
     }
 
     void playSound(AudioManager man) override {

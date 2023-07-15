@@ -58,15 +58,8 @@ class InteractiveAnimationCommand {
     int preBeats = 4;
     int postBeats = 2;
     Vec2d pos;
-    Animator animator;
-    int hitState = 0;
+    Animator animator; //does not actually need to be a class
     int offset;
-    bool kill;
-    bool playAfterBeatKill;
-
-    bool isTime(int beat) {
-        return beat >= startBeat - preBeats && beat <= endBeat + postBeats;
-    }
 
     int getOffset(int beatA, int progressA, int beatB, int progressB) {
         int timeA = beatA * 100 + progressA;
@@ -81,10 +74,7 @@ class InteractiveAnimationCommand {
         endBeat = _endBeat;
         pos = _pos;
         animator = Animator();
-        hitState = 0;
         offset = 0;
-        kill = false;
-        playAfterBeatKill = false;
     }
 
     void update(int beat, int progress, std::vector<playableBeatStatus> beatStates) {
@@ -99,7 +89,6 @@ class InteractiveAnimationCommand {
         }
 
         if (!found) return;
-        //if (!isTime(beat)) return;
 
         if (state == playerStatus::IDLE || state == playerStatus::READY_TO_HIT) {
             animator.shakingObject(beat, progress, startBeat - preBeats, startBeat, pos);
@@ -107,7 +96,6 @@ class InteractiveAnimationCommand {
             animator.hitObject(pos);
             offset = getOffset(startBeat, 0, beat, progress);
         } else if (state == playerStatus::CORRECT_LIFT) {
-            playAfterBeatKill = true;
             animator.burstingObject(beat, progress, endBeat, endBeat + postBeats, offset, pos);
         } 
     }

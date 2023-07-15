@@ -8,7 +8,6 @@
 #include "beatManager.cpp"
 #include "audioManager.cpp"
 #include "constants.h"
-#include "animator.cpp"
 #include "vectorShapes.h"
 #include "mathHelpers.h"
 #include "animationCommand.cpp"
@@ -34,11 +33,10 @@ int main( int argc, char *argv[] )
 	CircleEffect pointerEffect(800, 20);
 	touchPosition touch;
 	TouchTracker touchTracker(0);
-	BeatManager beatManager(60, 2); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
+	BeatManager beatManager(120, 2); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
 	//it also goes insane with a bpm like (70, 2).
-	RhythmPath path = RhythmPath();
+	RhythmPath path = RhythmPath(2, 60);
 
-	Animator animator = Animator();
 	AnimationCommandManager animationCommandManager = AnimationCommandManager();
 
 	int combo = 0;
@@ -141,7 +139,7 @@ int main( int argc, char *argv[] )
 
 			
 			
-			path.OnBeat(songPos);
+			path.onBeat(songPos);
 			
 		}
 
@@ -213,22 +211,15 @@ int main( int argc, char *argv[] )
 			
 		}
 
+		//is just based on a timer, will remove items from list 5 beats after they were deactivated
 		path.killInactiveBeats(songPos.globalBeat, 5);
-
-		//how to cleanly kill beats?
-		//as animator might need to access info after beat should no longer be rendered
-		//but we don't want it to be active forever, that doesnt scale nicely
-		//could ask animator how much longer we need to keep it alive for, or have a default alive time of eg 5 beats after hide
-		//could have a boolean that says whether or not it's being used, when this goes false we can safely delete
-		//but a timeout is probably more failsafe + don't need extra flexibility rn
-		
 
 		path.renderBeats(songPos);
 
 
 		touchTracker.deleteOldEntries();
 
-		animationCommandManager.updateInteractiveAnimations(songPos, beatStates);
+		//animationCommandManager.updateInteractiveAnimations(songPos, beatStates);
 		//touchTracker.drawTrail(frame);
 
 
