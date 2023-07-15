@@ -39,7 +39,7 @@ class RhythmPath {
     
     //simple test
     std::vector<beatEntry> bar1 = {
-        {0, 0, 20, 20, NOTE_C * OCT_3, QUART_BEAT},
+        {0, 0, 20, 20, NOTE_C * OCT_3, QUART_BEAT, 60, 20},
         {2, 2, 50, 20, NOTE_FS * OCT_3, QUART_BEAT},
         {4, 4, 80, 20, NOTE_FS * OCT_3, QUART_BEAT}
     };
@@ -156,16 +156,70 @@ class RhythmPath {
         for (size_t i = 0; i < spawnedBeats.size(); i++) {
             BeatInteractable* b = spawnedBeats[i];
 
-            //if (pos.globalBeat < b->getStartBeat()) {
-            //    vectorCircle(50, 50, 5, {31, 31, 31}, 0);
-            //} else {
-            //    vectorCircle(50, 50, 15, {31, 31, 31}, 0);
-            //}
-
             int p = b->getBeatProgress(beat, progressToNext, margin);
-            b->render(p);
+            if (b->isActive()) b->render(p);
         }
 
+    }
+
+    //duplicated code in these functions, but they're dense enough as it is so want to avoid extra branching
+    playerStatus getPlayerStatusForSingleBeat(playableBeatStatus status) {
+        //possible states: IDLE, EARLY_HIT, EARLY_LIFT, READY_TO_HIT, CORRECT_HIT, CORRECT_LIFT, MISS 
+        playerStatus os = status.oldPlayerState;
+
+        if (os == playerStatus::IDLE) {
+            if (status.timingProgress >= 100) {
+                return playerStatus::READY_TO_HIT;
+            } else if (status.isHit) {
+                return playerStatus::EARLY_HIT;
+            }
+        } else if (os == playerStatus::READY_TO_HIT) {
+            if (status.isHit) {
+                return playerStatus::CORRECT_HIT;
+            } else if (status.timingProgress > 200) {
+                return playerStatus::MISS;
+            }
+        } else if (os == playerStatus::EARLY_HIT) {
+            if (!status.isHit) {
+                return playerStatus::EARLY_LIFT;
+            }
+        } else if (os == playerStatus::CORRECT_HIT) {
+            if (!status.isHit || status.timingProgress > 200) {
+                return playerStatus::CORRECT_LIFT;
+            }
+        }
+        return os; //should never run... might be good to have some kind of warning system TODO
+    }
+
+    playerStatus getPlayerStatusForSliderBeat(playableBeatStatus status) {
+        //possible states: IDLE, EARLY_HIT, EARLY_LIFT, READY_TO_HIT, SLIDER_HIT, SLIDER_EARLY_LIFT, SLIDER_END, MISS 
+        playerStatus os = status.oldPlayerState;
+
+        if (os == playerStatus::IDLE) {
+            if (status.timingProgress >= 100) {
+                return playerStatus::READY_TO_HIT;
+            } else if (status.isHit) {
+                return playerStatus::EARLY_HIT;
+            }
+        } else if (os == playerStatus::READY_TO_HIT) {
+            if (status.isHit) {
+                return playerStatus::SLIDER_HIT;
+            } else if (status.timingProgress > 100) {
+                return playerStatus::MISS;
+            }
+        } else if (os == playerStatus::EARLY_HIT) {
+            if (!status.isHit) {
+                return playerStatus::EARLY_LIFT;
+            }
+        } else if (os == playerStatus::SLIDER_HIT) {
+            if (!status.isHit || status.timingProgress > 200) {
+                return playerStatus::SLIDER_EARLY_LIFT;
+            }
+            if (status.timingProgress >= 200) {
+                return playerStatus::SLIDER_END;
+            }
+        } 
+        return os;
     }
 
     std::vector<playableBeatStatus> getBeatStates(songPosition pos, int touchX, int touchY) {
@@ -184,6 +238,7 @@ class RhythmPath {
 
             if (isHit) {
                 if (b->isSlider()) { //for slider a hit needs to be in the right place, not just anywhere along it
+                    //if early we still want to log (even invalid) hits
                     bool rightPlace = b->isPenInRightPlace(beat, progressToNext, margin, touchX, touchY);
                     if (!rightPlace) isHit = false;
                 } 
@@ -191,14 +246,23 @@ class RhythmPath {
 
             playableBeatStatus beatState;
             beatState.beatStart = b->getStartBeat();
-            beatState.progress = p;
+            beatState.timingProgress = p;
             beatState.isHit = isHit;
+            beatState.oldPlayerState = b->getPlayerState();
 
+            playerStatus state;
             if (b->isSlider()) {
                 beatState.isSlider = true;
+                state = getPlayerStatusForSliderBeat(beatState);
             } else {
                 beatState.isSlider = false;
+                state = getPlayerStatusForSingleBeat(beatState);
             }
+        
+            b->setPlayerState(state);
+            beatState.playerState = state;
+
+            beatState.isActive = b->isActive();
             
             states.push_back(beatState);
         }
@@ -207,28 +271,33 @@ class RhythmPath {
     }
 
     //TODO: better memory management for this
-    void killBeat(int beatStart) {
+    void deactivateBeat(int beatStart, int currBeat) {
         //return;
         for (size_t i = 0; i < spawnedBeats.size(); i++) {
             if (spawnedBeats[i]->getStartBeat() == beatStart) {
-                spawnedBeats.erase(spawnedBeats.begin() + i);
-                i--;
+                spawnedBeats[i]->deactivate(currBeat);
+                //spawnedBeats.erase(spawnedBeats.begin() + i);
+                //i--;
             }
         }
     }
 
-    void tryPlaySound(int beatStart, AudioManager man) {
+    void killInactiveBeats(int currBeat, int timeout) {
         for (size_t i = 0; i < spawnedBeats.size(); i++) {
-            if (spawnedBeats[i]->getStartBeat() == beatStart) {
-                spawnedBeats[i]->tryPlaySound(man);
+            if (!spawnedBeats[i]->isActive()) {
+                int length = spawnedBeats[i]->getTimeSinceDeactivate(currBeat);
+                if (length > timeout) {
+                    spawnedBeats.erase(spawnedBeats.begin() + i);
+                    i--;
+                }
             }
         }
     }
 
-    void resetSound(int beatStart) {
+    void playSound(int beatStart, AudioManager man) {
         for (size_t i = 0; i < spawnedBeats.size(); i++) {
             if (spawnedBeats[i]->getStartBeat() == beatStart) {
-                spawnedBeats[i]->resetSound();
+                spawnedBeats[i]->playSound(man);
             }
         }
     }
@@ -267,6 +336,7 @@ class RhythmPath {
 
             // spawn beat
             BeatToHit* newBeat = new BeatToHit(globalBeat, beats[index].x, beats[index].y, beats[index].length, beats[index].pitch);
+            newBeat->setPlayerState(playerStatus::IDLE);
             spawnedBeats.push_back(newBeat);
             return;
         } else {

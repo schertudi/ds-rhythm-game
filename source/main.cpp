@@ -34,7 +34,7 @@ int main( int argc, char *argv[] )
 	CircleEffect pointerEffect(800, 20);
 	touchPosition touch;
 	TouchTracker touchTracker(0);
-	BeatManager beatManager(120, 2); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
+	BeatManager beatManager(60, 2); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
 	//it also goes insane with a bpm like (70, 2).
 	RhythmPath path = RhythmPath();
 
@@ -148,8 +148,9 @@ int main( int argc, char *argv[] )
 		//int hitState;
 		int penX = -100;
 		int penY = -100;
+		bool isPenDown = key & KEY_TOUCH;
 
-		if(key & KEY_TOUCH) {
+		if(isPenDown) {
 			touchRead(&touch);
 
 			penX = touch.px;
@@ -164,46 +165,63 @@ int main( int argc, char *argv[] )
 			//pointerEffect.basicCircle(touch.px, touch.py, beatManager.getProgress());
 		}
 
-		//a tad inefficient but probably not worth optimising at this point
+		//how efficient is this?
 		std::vector<playableBeatStatus> beatStates = path.getBeatStates(songPos, penX, penY);
-		for (size_t i = 0; i < beatStates.size(); i++) {
-			//spot early beat: beat hit but progress < 100
-			playableBeatStatus status = beatStates[i];
-			if (status.progress < 100 && status.isHit) {
-				combo = 0;
-				path.killBeat(status.beatStart);
-			}
 
-			if (status.isSlider) {
-				if (status.progress == 100 && status.isHit) { //starting beat, play sound (once)
-					path.tryPlaySound(status.beatStart, audioManager);
-				}
-				bool shouldBeHitting = status.progress > 100 && status.progress < 200;
-				if (shouldBeHitting && !status.isHit) { //let go of slider, so kill
-					combo = 0;
-					path.killBeat(status.beatStart);
-				}
-				if (status.progress == 200) { //end beat, play sound (once)
+		
+		for (size_t i = 0; i < beatStates.size(); i++) {
+			playerStatus status = beatStates[i].playerState;
+			int beatStart = beatStates[i].beatStart;
+			bool isSlider = beatStates[i].isSlider;
+			if (status == beatStates[i].oldPlayerState) continue; //only interested in acting on new events
+			if (!beatStates[i].isActive) continue; //don't care about beats marked for deletion
+
+			if (status == playerStatus::EARLY_HIT) {
+				combo = 0;
+				path.deactivateBeat(beatStart, songPos.globalBeat);
+			}
+			if (isSlider) {
+				if (status == playerStatus::SLIDER_HIT) { //starting beat, play sound (once)
 					combo += 1;
-					path.resetSound(status.beatStart);
-					path.tryPlaySound(status.beatStart, audioManager);
-					path.killBeat(status.beatStart);
+					path.playSound(beatStart, audioManager);
+				}
+				if (status == playerStatus::SLIDER_EARLY_LIFT) {
+					combo = 0;
+					path.deactivateBeat(beatStart, songPos.globalBeat);
+				}
+				if (status == playerStatus::SLIDER_END) { //play end beat
+					combo += 1;
+					path.playSound(beatStart, audioManager);
+					path.deactivateBeat(beatStart, songPos.globalBeat);
 				}
 			} else {
 				//check if hit singular beat on time
-				if (status.progress == 100 && status.isHit) {
+				if (status == playerStatus::CORRECT_HIT) {
 					combo += 1;
-					path.tryPlaySound(status.beatStart, audioManager);
-					path.killBeat(status.beatStart);
+					path.playSound(beatStart, audioManager);
+				}
+				if (status == playerStatus::CORRECT_LIFT) {
+					path.deactivateBeat(beatStart, songPos.globalBeat);
 				}
 			}
 
 			//late beat: not hit but passed its window
-			if (status.progress > 200) {
+			if (status == playerStatus::MISS) {
 				combo = 0;
-				path.killBeat(status.beatStart);
+				path.deactivateBeat(beatStart, songPos.globalBeat);
 			}
+			
 		}
+
+		path.killInactiveBeats(songPos.globalBeat, 5);
+
+		//how to cleanly kill beats?
+		//as animator might need to access info after beat should no longer be rendered
+		//but we don't want it to be active forever, that doesnt scale nicely
+		//could ask animator how much longer we need to keep it alive for, or have a default alive time of eg 5 beats after hide
+		//could have a boolean that says whether or not it's being used, when this goes false we can safely delete
+		//but a timeout is probably more failsafe + don't need extra flexibility rn
+		
 
 		path.renderBeats(songPos);
 
@@ -213,21 +231,12 @@ int main( int argc, char *argv[] )
 		animationCommandManager.updateInteractiveAnimations(songPos, beatStates);
 		//touchTracker.drawTrail(frame);
 
-		playableBeatStatus myStatus;
-        myStatus.beatStart = -1; 
-        for (size_t i = 0; i < beatStates.size(); i++) {
-            if (beatStates[i].beatStart == 0) {
-                myStatus = beatStates[i];
-            }
-        }
 
 		consoleClear();
 		int fineBeat = songPos.globalBeat * songPos.numSubBeats + songPos.subBeat;
 		iprintf("\x1b[8;1Htime .%i.", fineBeat * 100 + songPos.subBeatProgress);
 		iprintf("\x1b[9;1Hbar# %i", songPos.bar);
 		iprintf("\x1b[10;1Hcombo %i", combo);
-		iprintf("\x1b[11;1Hstate0 .%i.", myStatus.isHit);
-		iprintf("\x1b[12;1Hoffset .%i.", animationCommandManager.getOffset());
 		
 		//iprintf("\x1b[8;1HglobalBeat# %i", songPos.globalBeat);
 		//iprintf("\x1b[9;1HlocalBeat# %i", songPos.localBeat);

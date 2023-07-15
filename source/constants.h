@@ -17,11 +17,16 @@ struct songPosition {
     int numBeatsInBar;
 };
 
+enum playerStatus { IDLE, EARLY_HIT, EARLY_LIFT, READY_TO_HIT, CORRECT_HIT, CORRECT_LIFT, SLIDER_HIT, SLIDER_EARLY_LIFT, SLIDER_END, MISS }; 
+
 struct playableBeatStatus {
     int beatStart;
-    int progress;
+    int timingProgress; //gives info about current timing for beat (eg if hitting it now would be too early/just on time/too late)
+    playerStatus playerState; //what is player actually doing?
+    playerStatus oldPlayerState; //what was player doing last frame?
     bool isHit; //pen is both down and in the right place
     bool isSlider;
+    bool isActive;
 };
 
 #define NUM_SUBLAYERS 10
