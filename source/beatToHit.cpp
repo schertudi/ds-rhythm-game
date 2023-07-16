@@ -3,6 +3,12 @@
 #include "constants.h"
 #include "mathHelpers.h"
 
+/*
+more interactable ideas:
+swipe (need pen at fixed starting position, then quickly move it in a certain direction, less precision needed than slider)
+multi-tap (successive beats appear at same x,y position, but rendering and timing is done so that it actually works) (can then use use bouncingBallStraight)
+*/
+
 class BeatInteractable {
     private:
     bool _isSlider = false;
@@ -17,7 +23,7 @@ class BeatInteractable {
 
     public:
     virtual void render(int progress) = 0; //<100 means approaching, 100 means at beat, >100 means passed
-    virtual bool isHit(int touchX, int touchY, int globalBeat, int progressToNext, int margin) = 0;
+    virtual bool isHit(int touchX, int touchY, int globalBeat, int progressToNext, int margin) = 0; //mind radius on this one, can wrongly detect collisions if too big
     virtual int getStartBeat() = 0;
     virtual int getEndBeat() = 0; //unused.. for now?
     virtual Vec2d getStartPos() = 0;
@@ -153,7 +159,7 @@ class BeatToSlide : public BeatInteractable {
         startY = _startY;
         endX = _endX;
         endY = _endY;
-        radius = 10;
+        radius = 15;
         lengthInBeats = endBeat - startBeat;
         noteLength = _len;
         pitch = _pitch;
@@ -188,20 +194,19 @@ class BeatToSlide : public BeatInteractable {
 
     bool isHit(int touchX, int touchY, int globalBeat, int progressToNext, int margin) override {
         int p = getBeatProgress(globalBeat, progressToNext, margin);
-        int allowedRadius = 30; //must be within this much dist of target
 
         if (p < 100) {
-            return touchX > startX - allowedRadius && touchX < startX + allowedRadius 
-                && touchY > startY - allowedRadius && touchY < startY + allowedRadius;
+            return touchX > startX - radius && touchX < startX + radius 
+                && touchY > startY - radius && touchY < startY + radius;
         } else if (p <= 200) {
             int midX = startX + (endX - startX) * (p - 100) / 100;
             int midY = startY + (endY - startY) * (p - 100) / 100;
             
-            return touchX > midX - allowedRadius && touchX < midX + allowedRadius 
-                && touchY > midY - allowedRadius && touchY < midY + allowedRadius;
+            return touchX > midX - radius && touchX < midX + radius 
+                && touchY > midY - radius && touchY < midY + radius;
         } 
-        return touchX > endX - allowedRadius && touchX < endX + allowedRadius 
-            && touchY > endY - allowedRadius && touchY < endY + allowedRadius;
+        return touchX > endX - radius && touchX < endX + radius 
+            && touchY > endY - radius && touchY < endY + radius;
     }
 
     int getStartBeat() override {

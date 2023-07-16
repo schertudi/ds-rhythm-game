@@ -95,41 +95,6 @@ class Animator {
         vectorCircle(x, y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
     }
 
-    void bouncingBallDiagonal2(int progress, int beat) { //beat 0 start and then we offset from there
-        Vec2d start = {20, 100};
-        Vec2d hit = {50, 80};
-        Vec2d end = {80, 100};
-        int xOffset = beat * (end.x - start.x);
-        start.x += xOffset;
-        hit.x += xOffset;
-        end.x += xOffset;
-
-        int prog = 0;
-        int x, y;
-        if (progress < 50) {
-            //0 maps to 0, 50 maps to 100
-            prog = progress * 2;
-            //want speedup when closer to 0
-            int p = 100 - prog;
-            p = ((p * p / 10) + (p * 10)) / 20;
-            prog = 100 - p;
-
-            x = lerp(start.x, hit.x, prog);
-            y = lerp(start.y, hit.y, prog);
-            
-        } else {
-            //have values in range of 50 to 100, want to flip it so 50 maps to 100 and 100 maps to 0
-            prog = (progress - 50) * 2;
-            //speedup when closest to 100
-            prog = prog * prog / 100;
-            
-            x = lerp(hit.x, end.x, prog);
-            y = lerp(hit.y, end.y, prog);
-        }
-
-        vectorCircle(x, y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
-    }
-
     void bouncingBallDiagonal(int startTime, int endTime, int currTime, Vec2d startPos, Vec2d endPos, int height) { //beat 0 start and then we offset from there
         //Vec2d start = {20, 100};
         //Vec2d hit = {50, 80};
@@ -226,6 +191,7 @@ class Animator {
         int shimmerDensity = 7;
         int shimmerWidth = 4 + smoothProgress;
         int r = radius + ((cosLerp(i * shimmerDensity + shimmerRot) * shimmerWidth) >> 12);
+        if (r < 0) r = 0;
         r = r * r * r / 1000 + 10;
         return r;
     }
@@ -266,11 +232,11 @@ class Animator {
         return r;
     }
 
-    void dancingStarfish(Vec2d pos, int progress, int beat, bool partial=false, int startAngle=0, int endAngle = 360) {
+    void dancingStarfish(Vec2d pos, int progress, int radius, bool partial=false, int startAngle=0, int endAngle = 360) {
         int smoothProgress = sinLerp((progress * 32767) / 100) / 1000;
         if (smoothProgress < 0) smoothProgress /= 2;
        
-        int radius = 20;
+        //int radius = 20;
         int shimmerRot = 0;
         if (!partial) shimmerRot = (progress - 50) * (32767) / 100;
 
@@ -335,7 +301,7 @@ class Animator {
 
         vectorWideningLine(start.x, start.y, starfishPos.x, starfishPos.y, startThickness, width, {10, 10, 10}, ANIMATION_MG_LAYER);
 
-        dancingStarfish(starfishPos, progress, beat, true, angleDeg - 80, angleDeg + 80);
+        dancingStarfish(starfishPos, progress, 20, true, angleDeg - 80, angleDeg + 80);
     }
 
     void slidingCircle(Vec2d start, Vec2d end, Vec2d penPos) {
@@ -363,7 +329,7 @@ class Animator {
 
     }
 
-    void colourChangeSlider(int x, int startY, int endY, Colour startC, Colour endC, Vec2d penPos) {
+    void colourChangeSlider(int x, int startY, int endY, Colour startC, Colour endC, Vec2d penPos, Vec2d rectTop, Vec2d rectBottom) {
         Vec2d sliderPos = {x, startY};
         
         if (startY < endY) {
@@ -379,11 +345,11 @@ class Animator {
         int lerp = inverseLerp(startY, endY, sliderPos.y);
         Colour c = lerpColour(startC, endC, lerp);
 
-        vectorRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, c, ANIMATION_BG_LAYER);
+        vectorRect(rectTop.x, rectTop.y, rectBottom.x, rectBottom.y, c, ANIMATION_BG_LAYER);
 
-        vectorRect(x - 2, startY, x + 2, endY, {5, 5, 5}, ANIMATION_FG_LAYER);
+        //vectorRect(x - 2, startY, x + 2, endY, {5, 5, 5}, ANIMATION_FG_LAYER);
 
-        vectorRect(sliderPos.x - 10, sliderPos.y - 5, sliderPos.x + 10, sliderPos.y + 5, {5, 5, 5}, ANIMATION_FG_LAYER);
+        //vectorRect(sliderPos.x - 10, sliderPos.y - 5, sliderPos.x + 10, sliderPos.y + 5, {5, 5, 5}, ANIMATION_FG_LAYER);
     }
 
     void shakingObject(int beat, int progress, int startBeat, int endBeat, Vec2d pos) {

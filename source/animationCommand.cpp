@@ -55,6 +55,18 @@ class BackgroundAnimationCommand {
 class InteractiveAnimationCommand {
     protected:
 
+    bool inStartPhase(int beat, int startBeat, int preBeats) {
+        return beat >= startBeat - preBeats && beat < startBeat;
+    }
+
+    bool inActivePhase(int beat, int startBeat, int endBeat) {
+        return beat >= startBeat && beat <= endBeat;
+    }
+
+    bool inEndPhase(int beat, int endBeat, int postBeats) {
+        return beat > endBeat && beat <= endBeat + postBeats;
+    }
+
     int getOffset(int beatA, int progressA, int beatB, int progressB) {
         int timeA = beatA * 100 + progressA;
         int timeB = beatB * 100 + progressB;
@@ -75,7 +87,9 @@ class InteractiveAnimationCommand {
 
     virtual void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) = 0;
 
-    virtual int getVal();
+    virtual int getVal() {
+        return 0;
+    }
 };
 
 class SlidingStarfishAnimation : public InteractiveAnimationCommand {
@@ -87,11 +101,8 @@ class SlidingStarfishAnimation : public InteractiveAnimationCommand {
     Vec2d lastKnownPenPos;
 
     public:
-    SlidingStarfishAnimation(int _startBeat, int _endBeat, Vec2d _startPos, Vec2d _endPos) { //can customize this with specific parameters
+    SlidingStarfishAnimation(int _startBeat) { //can customize this with specific parameters
         startBeat = _startBeat;
-        endBeat = _endBeat;
-        startPos = _startPos;
-        endPos = _endPos;
         animator = Animator();
     }
 
@@ -99,6 +110,9 @@ class SlidingStarfishAnimation : public InteractiveAnimationCommand {
         int index = getBeatIndex(startBeat, beatStates);
         if (index == -1) return;
         playerStatus state = beatStates[index].playerState;
+        startPos = beatStates[index].startPos;
+        endPos = beatStates[index].endPos;
+        endBeat = beatStates[index].beatEnd;
 
         if (penPos.x > 0) { lastKnownPenPos = penPos; }
 
@@ -122,11 +136,11 @@ class ThrowingBallAnimation : public InteractiveAnimationCommand {
     Animator animator;
 
     public:
-    ThrowingBallAnimation(int _startBeat, int _endBeat, Vec2d _startPos, Vec2d _sliderEndPos, Vec2d _landPos) { //can customize this with specific parameters
+    ThrowingBallAnimation(int _startBeat, Vec2d _landPos) { //can customize this with specific parameters
         startBeat = _startBeat;
-        endBeat = _endBeat;
-        startPos = _startPos;
-        sliderEndPos = _sliderEndPos;
+        //endBeat = _endBeat;
+        //bstartPos = _startPos;
+        //sliderEndPos = _sliderEndPos;
         landPos = _landPos;
         animator = Animator();
     }
@@ -135,6 +149,9 @@ class ThrowingBallAnimation : public InteractiveAnimationCommand {
         int index = getBeatIndex(startBeat, beatStates);
         if (index == -1) return;
         playerStatus state = beatStates[index].playerState;
+        startPos = beatStates[index].startPos;
+        sliderEndPos = beatStates[index].endPos;
+        endBeat = beatStates[index].beatEnd;
 
         if (state == playerStatus::SLIDER_HIT) {
             animator.slidingCircle(startPos, sliderEndPos, penPos);
@@ -149,7 +166,78 @@ class ThrowingBallAnimation : public InteractiveAnimationCommand {
 
 };
 
-class BouncingBallAnimation : public InteractiveAnimationCommand {
+class ColourSliderAnimation : public InteractiveAnimationCommand {
+    int absoluteStartBeat;
+    int absoluteEndBeat;
+    int startBeat;
+    int endBeat;
+    Colour startColour;
+    Colour endColour;
+    Animator animator;
+    int preBeats = 2;
+    int postBeats = 2;
+    bool killed = false;
+    std::vector<int> startBeats;
+    int startBeatIndex;
+    Vec2d startPos;
+    Vec2d endPos;
+    Vec2d rectTop;
+    Vec2d rectBottom;
+
+    public:
+    ColourSliderAnimation(std::vector<int> _startBeats, int _endBeat, Colour _startColour, Colour _endColour, Vec2d _rectTop, Vec2d _rectBottom) { //can customize this with specific parameters
+        startColour = _startColour;
+        endColour = _endColour;
+        animator = Animator();
+        killed = false;
+        startBeats = _startBeats;
+        startBeatIndex = 0;
+        startBeat = startBeats[startBeatIndex];
+        absoluteStartBeat = startBeats[0];
+        absoluteEndBeat = _endBeat;
+        rectTop = _rectTop;
+        rectBottom = _rectBottom;
+    }
+
+    void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) override {
+        if (beat < absoluteStartBeat - preBeats || beat > absoluteEndBeat + postBeats) {
+            return;
+        }
+
+        if (beat < startBeat) { 
+            vectorRect(rectTop.x, rectTop.y, rectBottom.x, rectBottom.y, startColour, ANIMATION_BG_LAYER);
+            return; 
+        }
+
+        if (beat == startBeat) {
+            //find related slider
+            int index = getBeatIndex(startBeat, beatStates);
+            endBeat = beatStates[index].beatEnd;
+            startPos = beatStates[index].startPos;
+            endPos = beatStates[index].endPos;
+        }
+
+        if (startBeat <= beat && beat <= endBeat) {
+            //vectorRect(0, 0, 100, 100, endColour, 0);
+            animator.colourChangeSlider(startPos.x, startPos.y, endPos.y, startColour, endColour, penPos, rectTop, rectBottom);
+        }
+
+        if (beat == endBeat) { //find next
+            startBeatIndex += 1;
+            startBeat = startBeats[startBeatIndex];
+            Colour swap = startColour;
+            startColour = endColour;
+            endColour = swap;
+        }
+    }
+
+    int getVal() override {
+        return 0;
+    }
+
+};
+
+class DiagonalBouncingBallAnimation : public InteractiveAnimationCommand {
     private:
     int startBeat;
     int numBeats;
@@ -171,7 +259,7 @@ class BouncingBallAnimation : public InteractiveAnimationCommand {
     bool killed;
 
     public:
-    BouncingBallAnimation(int _startBeat, int _numBeats, int _beatTimeDist) { //can customize this with specific parameters
+    DiagonalBouncingBallAnimation(int _startBeat, int _numBeats, int _beatTimeDist) { //can customize this with specific parameters
         startBeat = _startBeat;
         numBeats = _numBeats;
         beatTimeDist = _beatTimeDist;
@@ -186,6 +274,7 @@ class BouncingBallAnimation : public InteractiveAnimationCommand {
     }
 
     //TODO: fix bug where having beatTimeDist > 2 means that a miss/early hit won't always be caught immediately
+    // beatTimeDist = 2 works, beatTimeDist = 1 is untested
 
     void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) override { 
         //find next beat played in stream of beats
@@ -278,8 +367,46 @@ class BurstingBeatAnimation : public InteractiveAnimationCommand {
     }
 };
 
+class DancingStarfishAnimation : public InteractiveAnimationCommand {
+    private:
+    int startBeat;
+    Animator animator; //does not actually need to be a class
+    int timeAtLift;
+    bool setTime;
+    int shrinkTime = 200;
 
+    public:
+    DancingStarfishAnimation(int _startBeat) { //can customize this with specific parameters
+        startBeat = _startBeat;
+        timeAtLift = 0;
+        setTime = false;
+    }
 
+    void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) override {
+        int index = getBeatIndex(startBeat, beatStates);
+        if (index == -1) return;
+        playerStatus state = beatStates[index].playerState;
+        Vec2d pos = beatStates[index].startPos;
+
+        if (state == playerStatus::IDLE || state == playerStatus::READY_TO_HIT) {
+            //animator.shakingObject(beat, progress, startBeat - preBeats, startBeat, pos);
+        } else if (state == playerStatus::CORRECT_HIT) {
+            
+            //animator.hitObject(pos);
+            animator.dancingStarfish(pos, progress, 20);
+        } else if (state == playerStatus::CORRECT_LIFT) {
+            if (!setTime) {
+                timeAtLift = convertBeatToTime(beat, progress);
+                setTime = true;
+            }
+            int t = inverseLerp(timeAtLift, timeAtLift + shrinkTime, convertBeatToTime(beat, progress));
+            if (t >= 70) { return; }
+            int radius = lerp(20, 5, t);
+            animator.dancingStarfish(pos, progress, radius);
+            //animator.burstingObject(beat, progress, endBeat, endBeat + postBeats, offset, pos);
+        } 
+    }
+};
 
 class AnimationCommandManager {
     //contains a list of animation commands, to be executed on beats
@@ -290,14 +417,19 @@ class AnimationCommandManager {
     public:
     AnimationCommandManager() {
         //initialize animation commands
-        InteractiveAnimationCommand* a = new BurstingBeatAnimation(0, 0, {20, 20});
-        InteractiveAnimationCommand* b = new BurstingBeatAnimation(2, 2, {50, 20});
-        //InteractiveAnimationCommand* c = new ThrowingBallAnimation(2, 6, {20, 20}, {80, 20}, {150, 80});
-        //InteractiveAnimationCommand* c = new SlidingStarfishAnimation(2, 6, {20, 20}, {80, 20});
-        InteractiveAnimationCommand* c = new BouncingBallAnimation(0, 6, 2);
+        //InteractiveAnimationCommand* a = new BurstingBeatAnimation(0, 0, {20, 20});
+        //InteractiveAnimationCommand* b = new BurstingBeatAnimation(2, 2, {50, 20});
+        InteractiveAnimationCommand* c = new ThrowingBallAnimation(2, {150, 80});
+        //InteractiveAnimationCommand* c = new SlidingStarfishAnimation(2);
+        //InteractiveAnimationCommand* c = new DiagonalBouncingBallAnimation(0, 6, 2);
+        //InteractiveAnimationCommand* c = new ColourSliderAnimation({0, 6, 12}, 14, {5, 0, 1}, {15, 0, 5}, {0, 50}, {SCREEN_WIDTH, SCREEN_HEIGHT - 50});
+        //InteractiveAnimationCommand* c = new DancingStarfishAnimation(0);
+        //InteractiveAnimationCommand* d = new DancingStarfishAnimation(2);
+        //InteractiveAnimationCommand* e = new DancingStarfishAnimation(4);
         //interactiveAnimationCommands.push_back(a);
         //interactiveAnimationCommands.push_back(b);
         interactiveAnimationCommands.push_back(c);
+        //interactiveAnimationCommands.push_back(d);
     }
 
     /*

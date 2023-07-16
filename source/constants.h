@@ -32,6 +32,7 @@ enum playerStatus { IDLE, EARLY_HIT, EARLY_LIFT, READY_TO_HIT, CORRECT_HIT, CORR
 
 struct playableBeatStatus {
     int beatStart;
+    int beatEnd;
     int timingProgress; //gives info about current timing for beat (eg if hitting it now would be too early/just on time/too late)
     playerStatus playerState; //what is player actually doing?
     playerStatus oldPlayerState; //what was player doing last frame?

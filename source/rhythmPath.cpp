@@ -31,15 +31,13 @@ class RhythmPath {
     
     //simple test
     std::vector<beatEntry> bar1 = {
-        {0, 0, 20, 20, NOTE_C * OCT_3, QUART_BEAT, 80, 20},
-        {2, 2, 50, 20, NOTE_FS * OCT_3, QUART_BEAT},
-        {4, 4, 80, 20, NOTE_FS * OCT_3, QUART_BEAT},
-        {6, 6, 110, 20, NOTE_FS * OCT_3, QUART_BEAT, 120, 20}
+        {2, 6, 50, 20, NOTE_FS * OCT_3, QUART_BEAT, 100, 20},
+        //{6, 6, 20, 20, NOTE_FS * OCT_3, QUART_BEAT, 120, 20}
     };
 
     std::vector<beatEntry> bar2 = {
         //{2, 6, 20, 20, NOTE_C * OCT_3, QUART_BEAT, 50, 20}
-        {1, 1, 110, 20, NOTE_FS * OCT_3, QUART_BEAT},
+        {4, 6, 80, 20, NOTE_FS * OCT_3, QUART_BEAT, 80, 50},
     };    
 
     std::vector<std::vector<beatEntry>> beatMap = {
@@ -72,6 +70,7 @@ class RhythmPath {
 
             playableBeatStatus beatState;
             beatState.beatStart = b->getStartBeat();
+            beatState.beatEnd = b->getEndBeat();
             beatState.timingProgress = p;
             beatState.isHit = isHit;
             beatState.oldPlayerState = b->getPlayerState();
