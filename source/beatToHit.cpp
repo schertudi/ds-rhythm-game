@@ -20,6 +20,8 @@ class BeatInteractable {
     virtual bool isHit(int touchX, int touchY, int globalBeat, int progressToNext, int margin) = 0;
     virtual int getStartBeat() = 0;
     virtual int getEndBeat() = 0; //unused.. for now?
+    virtual Vec2d getStartPos() = 0;
+    virtual Vec2d getEndPos() = 0;
     virtual int getBeatProgress(int globalBeat, int progressToNext, int margin) = 0;
     virtual void playSound(AudioManager man) = 0;
 
@@ -92,6 +94,14 @@ class BeatToHit : public BeatInteractable {
 
     int getEndBeat() override {
         return beat;
+    }
+
+    Vec2d getStartPos() override {
+        return {x, y};
+    }
+
+    Vec2d getEndPos() override {
+        return {x, y};
     }
 
     int getBeatProgress(int globalBeat, int progressToNext, int margin) {
@@ -200,6 +210,14 @@ class BeatToSlide : public BeatInteractable {
 
     int getEndBeat() override {
         return endBeat;
+    }
+
+    Vec2d getStartPos() override {
+        return {startX, startY};
+    }
+
+    Vec2d getEndPos() override {
+        return {endX, endY};
     }
 
     int getBeatProgress(int globalBeat, int progressToNext, int margin) override {

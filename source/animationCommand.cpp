@@ -5,6 +5,7 @@
 #include <tuple>
 #include "animator.cpp"
 #include "mathHelpers.h"
+#include "vectorShapes.h"
 
 
 
@@ -73,6 +74,8 @@ class InteractiveAnimationCommand {
     public:
 
     virtual void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) = 0;
+
+    virtual int getVal();
 };
 
 class SlidingStarfishAnimation : public InteractiveAnimationCommand {
@@ -151,73 +154,92 @@ class BouncingBallAnimation : public InteractiveAnimationCommand {
     int startBeat;
     int numBeats;
     int beatTimeDist;
-    Vec2d startPos;
-    int beatSpaceDist;
+
     Animator animator; //does not actually need to be a class
-    int offset;
-    int relativeBeat;
+
+    int currentBeat;
+    int nextBeat;
+
+    int currentBeatStartTime;
+    int currentBeatEndTime;
+
+    Vec2d currentBeatPos;
+    Vec2d nextBeatPos;
+
+    bool startPlaying;
+    bool stopPlaying;
     bool killed;
 
     public:
-    BouncingBallAnimation(int _startBeat, int _numBeats, int _beatTimeDist, Vec2d _startPos, int _beatSpaceDist) { //can customize this with specific parameters
+    BouncingBallAnimation(int _startBeat, int _numBeats, int _beatTimeDist) { //can customize this with specific parameters
         startBeat = _startBeat;
         numBeats = _numBeats;
         beatTimeDist = _beatTimeDist;
-        startPos = _startPos;
-        beatSpaceDist = _beatSpaceDist;
         animator = Animator();
-        offset = 0;
-        relativeBeat = -1;
+
+        nextBeat = startBeat;
+        currentBeat = -100;
+        
+        startPlaying = false;
+        stopPlaying = false;
         killed = false;
     }
 
-    void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) override {
+    //TODO: fix bug where having beatTimeDist > 2 means that a miss/early hit won't always be caught immediately
 
-        //we want ball to stay where it is until state is hit
-        //only check this on new beat change
-        //TODO: instakill animation if any beat in sequence is pressed too early
-        //TODO: figure out better way to handle animation if not pressed exactly on time (maybe system works via hit beat status and not time, could be more flexible too)
-        //essentially rework entire function :)
+    void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) override { 
+        //find next beat played in stream of beats
+        //look at state of next beat(s) to see what to do with ball
 
+        if (startPlaying && beat > startBeat + numBeats) { killed = true; }
         if (killed) { return; }
+        
+        if ((beat == nextBeat - 1 || beat == nextBeat) && !stopPlaying ) {
+            //vectorRect(0, 0, 10, 10, {10, 20, 20}, 100);
+            //find next hitBeat, should be at startbeat
+            int currIndex = getBeatIndex(nextBeat, beatStates);
+            if (currIndex == -1) { return; }
 
-        if (beat >= startBeat && beat < startBeat + (numBeats * beatTimeDist)) {
-            
-            if ((beat - startBeat) % beatTimeDist == 0) {
-                int newRelativeBeat;
-                newRelativeBeat = (beat - startBeat) / beatTimeDist;
-                if (newRelativeBeat == -1) { return; }
+            int nextIndex = getBeatIndex(nextBeat + beatTimeDist, beatStates);
 
-                int index = getBeatIndex(startBeat + newRelativeBeat * beatTimeDist, beatStates);
-                if (index == -1) return;
-                playerStatus state = beatStates[index].playerState;
-                if (state == playerStatus::CORRECT_HIT || state == playerStatus::CORRECT_LIFT) { relativeBeat = newRelativeBeat; }
-                if (state == playerStatus::MISS) { killed = true; }
+            playerStatus state = beatStates[currIndex].playerState;
+            playerStatus nextState = beatStates[nextIndex].playerState;
+            if (state == playerStatus::CORRECT_HIT) {
+                startPlaying = true;
 
-                //int nextIndex = getBeatIndex(startBeat + (newRelativeBeat + 1) * beatTimeDist, beatStates);
-                //if (index != -1) {
-                //    state = beatStates[index].playerState;
-                //    if (state == playerStatus::EARLY_HIT) { killed = true; }
-                //}
+                currentBeat = nextBeat;
+                nextBeat = currentBeat + beatTimeDist;
+
+                currentBeatStartTime = convertBeatToTime(beat, progress);
+                currentBeatEndTime = convertBeatToTime(nextBeat, 0);
+
+                
+                if (nextIndex == -1) {
+                    Vec2d offset =  { (nextBeatPos.x - currentBeatPos.x), (nextBeatPos.y - currentBeatPos.y) };
+                    nextBeatPos.x += offset.x;
+                    nextBeatPos.y += offset.y;
+                    stopPlaying = true;
+                } else {
+                    nextBeatPos = beatStates[nextIndex].startPos;
+                }
+                currentBeatPos = beatStates[currIndex].startPos;
+               
             }
-            
+
+            if (state == playerStatus::EARLY_HIT || state == playerStatus::MISS
+                || nextState == playerStatus::EARLY_HIT || nextState == playerStatus::MISS) {
+                killed = true;
+            }
         }
 
-        //if (relativeBeat == -1) { return; }
+        if (!startPlaying) { return; }
 
-        int currBeat = startBeat + relativeBeat * beatTimeDist;
-        if (beat > currBeat + beatTimeDist) { killed = true; }
-
-        Vec2d currStart = startPos;
-        currStart.x += beatSpaceDist * relativeBeat;
-        Vec2d currEnd = currStart;
-        currEnd.x += beatSpaceDist;
-
-        int animStart = convertBeatToTime(currBeat, 0);
-        int animEnd = convertBeatToTime(startBeat + (relativeBeat + 1) * beatTimeDist, 0);
         int currTime = convertBeatToTime(beat, progress);
-        
-        animator.bouncingBallDiagonal(animStart, animEnd, currTime, currStart, currEnd, 20);
+        animator.bouncingBallDiagonal(currentBeatStartTime, currentBeatEndTime, currTime, currentBeatPos, nextBeatPos, 20);
+    }
+
+    int getVal() override {
+        return killed;
     }
 };
 
@@ -272,7 +294,7 @@ class AnimationCommandManager {
         InteractiveAnimationCommand* b = new BurstingBeatAnimation(2, 2, {50, 20});
         //InteractiveAnimationCommand* c = new ThrowingBallAnimation(2, 6, {20, 20}, {80, 20}, {150, 80});
         //InteractiveAnimationCommand* c = new SlidingStarfishAnimation(2, 6, {20, 20}, {80, 20});
-        InteractiveAnimationCommand* c = new BouncingBallAnimation(0, 4, 2, {20, 20}, 30);
+        InteractiveAnimationCommand* c = new BouncingBallAnimation(0, 6, 2);
         //interactiveAnimationCommands.push_back(a);
         //interactiveAnimationCommands.push_back(b);
         interactiveAnimationCommands.push_back(c);
@@ -294,6 +316,10 @@ class AnimationCommandManager {
         for (size_t i = 0; i < interactiveAnimationCommands.size(); i++) {
             interactiveAnimationCommands[i]->update(beat, pos.subBeatProgress, beatStates, penPos);
         }
+    }
+
+    int getVal() {
+        return interactiveAnimationCommands[0]->getVal();
     }
 
 };

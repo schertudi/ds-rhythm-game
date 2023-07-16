@@ -6,6 +6,17 @@
 #define HALF_HEIGHT (SCREEN_HEIGHT/2)
 #define BRAD_PI (1 << 14)
 
+struct Colour {
+    int r;
+    int g;
+    int b;
+};
+
+struct Vec2d {
+    int x;
+    int y;
+};
+
 struct songPosition {
     int globalBeat;
     int localBeat;
@@ -27,6 +38,8 @@ struct playableBeatStatus {
     bool isHit; //pen is both down and in the right place
     bool isSlider;
     bool isActive;
+    Vec2d startPos;
+    Vec2d endPos;
 };
 
 #define NUM_SUBLAYERS 10
