@@ -146,7 +146,8 @@ class BeatToSlide : public BeatInteractable {
     int startY;
     int endX;
     int endY;
-    int radius;
+    int startRadius = 15;
+    int slideRadius = 30;
     int lengthInBeats;
     int noteLength;
     int pitch;
@@ -159,7 +160,6 @@ class BeatToSlide : public BeatInteractable {
         startY = _startY;
         endX = _endX;
         endY = _endY;
-        radius = 15;
         lengthInBeats = endBeat - startBeat;
         noteLength = _len;
         pitch = _pitch;
@@ -196,17 +196,17 @@ class BeatToSlide : public BeatInteractable {
         int p = getBeatProgress(globalBeat, progressToNext, margin);
 
         if (p < 100) {
-            return touchX > startX - radius && touchX < startX + radius 
-                && touchY > startY - radius && touchY < startY + radius;
+            return touchX > startX - startRadius && touchX < startX + startRadius 
+                && touchY > startY - startRadius && touchY < startY + startRadius;
         } else if (p <= 200) {
             int midX = startX + (endX - startX) * (p - 100) / 100;
             int midY = startY + (endY - startY) * (p - 100) / 100;
             
-            return touchX > midX - radius && touchX < midX + radius 
-                && touchY > midY - radius && touchY < midY + radius;
+            return touchX > midX - slideRadius && touchX < midX + slideRadius 
+                && touchY > midY - slideRadius && touchY < midY + slideRadius;
         } 
-        return touchX > endX - radius && touchX < endX + radius 
-            && touchY > endY - radius && touchY < endY + radius;
+        return touchX > endX - slideRadius && touchX < endX + slideRadius 
+            && touchY > endY - slideRadius && touchY < endY + slideRadius;
     }
 
     int getStartBeat() override {

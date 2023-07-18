@@ -419,10 +419,10 @@ class AnimationCommandManager {
         //initialize animation commands
         //InteractiveAnimationCommand* a = new BurstingBeatAnimation(0, 0, {20, 20});
         //InteractiveAnimationCommand* b = new BurstingBeatAnimation(2, 2, {50, 20});
-        InteractiveAnimationCommand* c = new ThrowingBallAnimation(2, {150, 80});
+        //InteractiveAnimationCommand* c = new ThrowingBallAnimation(2, {150, 80});
         //InteractiveAnimationCommand* c = new SlidingStarfishAnimation(2);
         //InteractiveAnimationCommand* c = new DiagonalBouncingBallAnimation(0, 6, 2);
-        //InteractiveAnimationCommand* c = new ColourSliderAnimation({0, 6, 12}, 14, {5, 0, 1}, {15, 0, 5}, {0, 50}, {SCREEN_WIDTH, SCREEN_HEIGHT - 50});
+        InteractiveAnimationCommand* c = new ColourSliderAnimation({0, 6, 12}, 14, {5, 0, 1}, {15, 0, 5}, {0, 50}, {SCREEN_WIDTH, SCREEN_HEIGHT - 50});
         //InteractiveAnimationCommand* c = new DancingStarfishAnimation(0);
         //InteractiveAnimationCommand* d = new DancingStarfishAnimation(2);
         //InteractiveAnimationCommand* e = new DancingStarfishAnimation(4);
