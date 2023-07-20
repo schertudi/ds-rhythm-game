@@ -135,7 +135,28 @@ class Animator {
         vectorCircle(x, y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
     }
 
-    void fillTank(int progress, int beat, int numBeats) {
+    void fillTank(int beat, int progress, int numBeats, Colour c) {
+        //divide screen into numBeats sections
+        //at beat = 0 we are 1 / numBeats of the way, at beat = 1 it is 2 / numBeats of the way, so on
+        //at beat = numBeat, we could either fill up entire screen, OR drain at this point
+        if (beat >= numBeats) { return; }
+        if (beat < 0) { return; }
+
+        int distToTop = 100 * (beat + 1) / (numBeats);
+        distToTop = lerp(SCREEN_HEIGHT, 0, distToTop);
+
+        if (beat + 1 < numBeats) { //if not quite reaching top yet, keep "filling"
+            vectorRect(0, distToTop, SCREEN_WIDTH, SCREEN_HEIGHT, {c.r, c.g, c.b}, ANIMATION_BG_LAYER);
+        } else {
+            //animate "drain" over this beat
+            int maxDist = 100 * (numBeats - 1) / (numBeats);
+            maxDist = lerp(SCREEN_HEIGHT, 0, maxDist);
+            distToTop = lerp(maxDist, SCREEN_HEIGHT, progress);
+            vectorRect(0, distToTop, SCREEN_WIDTH, SCREEN_HEIGHT, {c.r, c.g, c.b}, ANIMATION_BG_LAYER);
+        }
+        
+
+        /*
         beat = beat % numBeats;
         if (beat < numBeats - 2) {
             int y = (SCREEN_HEIGHT / numBeats * (numBeats - beat));
@@ -149,9 +170,10 @@ class Animator {
             int y = lerp((SCREEN_HEIGHT / numBeats * (numBeats - beat + 1)), SCREEN_HEIGHT, progress);
             vectorRect(0, y, SCREEN_WIDTH, SCREEN_HEIGHT, {0, 31, 15}, ANIMATION_BG_LAYER);
         }
+        */
     }
 
-    void sineWave(int progress, int beat, int numBeats, int wall, bool invert=false) { //wall=1: top; wall=2: bottom
+    void sineWave(int beat, int progress, direction wallSide, Colour colour) { //wall=1: top; wall=2: bottom
         glBegin2D();
 
         int curveDepth = cosLerp((progress * 32767) / 100) / 500;
@@ -163,8 +185,11 @@ class Animator {
         int yOffset = 20;
         int xOffset = 0;
 
-        if (wall == 2) yOffset = SCREEN_HEIGHT - yOffset;
-        if (invert) curveDepth = -curveDepth;
+        if (wallSide == direction::BOTTOM) {
+            yOffset = SCREEN_HEIGHT - yOffset;
+            curveDepth = -curveDepth;
+        }
+        //if (invert) 
 
         for( i = 0; i < SCREEN_WIDTH; i += 1)
         {
@@ -175,13 +200,13 @@ class Animator {
             int y2 = yOffset + ((sinLerp(((i - xOffset) + 1) * curveWidth) * (curveDepth) ) >> 12);
 
             int pivotY = 0;
-            if (wall == 2) pivotY = SCREEN_HEIGHT;
+            if (wallSide == direction::BOTTOM) { pivotY = SCREEN_HEIGHT; };
 
             // draw a triangle
             glTriangleFilled(x, y,
                             x2, y2,
                             x, pivotY,
-                            RGB15(21, 0, 21), ANIMATION_BG_LAYER);
+                            RGB15(colour.r, colour.g, colour.b), ANIMATION_BG_LAYER);
         }
                 
         glEnd2D();

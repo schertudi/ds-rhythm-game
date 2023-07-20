@@ -31,8 +31,10 @@ class RhythmPath {
     
     //simple test
     std::vector<beatEntry> bar1 = {
-        {0, 2, 20, 20, NOTE_FS * OCT_3, QUART_BEAT, 20, 80},
-        {6, 8, 50, 80, NOTE_FS * OCT_3, QUART_BEAT, 50, 20}
+        {0, 0, 20, 50, NOTE_FS * OCT_3, QUART_BEAT, 20, 80},
+        {2, 2, 50, 50, NOTE_FS * OCT_3, QUART_BEAT, 50, 20},
+        {4, 4, 80, 50, NOTE_FS * OCT_3, QUART_BEAT, 50, 20},
+        {6, 6, 110, 50, NOTE_FS * OCT_3, QUART_BEAT, 50, 20}
     };
 
     std::vector<beatEntry> bar2 = {

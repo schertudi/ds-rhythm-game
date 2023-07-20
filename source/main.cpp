@@ -126,7 +126,7 @@ int main( int argc, char *argv[] )
 			//audioManager.metronome(1);
 		}
 		if (beatStatus == 2) {
-			//audioManager.metronome(2);
+			audioManager.metronome(2);
 		}
 
 		if (beatStatus > 0) {
@@ -223,15 +223,17 @@ int main( int argc, char *argv[] )
 		animationCommandManager.updateInteractiveAnimations(songPos, beatStates, {penX, penY});
 		//animator.bouncingBallDiagonal(songPos.globalBeatProgress, songPos.globalBeat);
 		//touchTracker.drawTrail(frame);
+		//animator.fillTank(songPos.globalBeat, songPos.globalBeatProgress, 4, {0, 20, 20});
 		int val = animationCommandManager.getVal();
 
 
 		consoleClear();
 		int fineBeat = songPos.globalBeat * songPos.numSubBeats + songPos.subBeat;
-		iprintf("\x1b[8;1Htime .%i.", fineBeat * 100 + songPos.subBeatProgress);
+		//iprintf("\x1b[8;1Htime .%i.", fineBeat * 100 + songPos.subBeatProgress);
+		iprintf("\x1b[8;1Hbeat .%i.", songPos.globalBeat);
 		iprintf("\x1b[9;1Hbar# %i", songPos.bar);
 		iprintf("\x1b[10;1Hcombo %i", combo);
-		iprintf("\x1b[11;1Hnext beat ..%i..", val);
+		iprintf("\x1b[11;1Hcurr beat ..%i..", val);
 		
 		//iprintf("\x1b[8;1HglobalBeat# %i", songPos.globalBeat);
 		//iprintf("\x1b[9;1HlocalBeat# %i", songPos.localBeat);

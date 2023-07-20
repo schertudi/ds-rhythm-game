@@ -10,14 +10,8 @@
 
 
 class BackgroundAnimationCommand {
-    private:
-    int startBeat;
-    int endBeat;
-    int preBeats = 4;
-    int postBeats = 2;
-    Vec2d pos;
-    Animator animator;
 
+    protected:
     bool inStartPhase(int beat, int startBeat, int preBeats) {
         return beat >= startBeat - preBeats && beat < startBeat;
     }
@@ -31,23 +25,29 @@ class BackgroundAnimationCommand {
     }
 
     public:
-    BackgroundAnimationCommand(int _startBeat, int _endBeat, Vec2d _pos) { //can customize this with specific parameters
+    virtual void update(int beat, int progress) = 0;
+};
+
+class SineWaveAnimation : public BackgroundAnimationCommand {
+    private:
+    int startBeat;
+    int endBeat;
+    int preBeats = 2;
+    int postBeats = 2;
+    direction wallSide;
+    Animator animator;
+
+    public:
+    SineWaveAnimation(int _startBeat, int _endBeat, direction _wall) { //can customize this with specific parameters
         startBeat = _startBeat;
         endBeat = _endBeat;
-        pos = _pos;
+        wallSide = _wall;
         animator = Animator();
     }
 
-    void update(int beat, int progress) {
-        if (inStartPhase(beat, startBeat, preBeats)) { //play pre sequence
-            animator.shakingObject(beat, progress, startBeat - preBeats, startBeat, pos);
-        }
-        if (inActivePhase(beat, startBeat, endBeat)) { //beat is active
-            //animator.dancingStarfish(pos, progress, beat);
-            animator.hitObject(pos);
-        }
-        if (inEndPhase(beat, endBeat, postBeats)) { //play post sequence
-            animator.burstingObject(beat, progress, endBeat + 1, endBeat + postBeats + 1, 0, pos);
+    void update(int beat, int progress) override {
+        if (inStartPhase(beat, startBeat, preBeats) || inActivePhase(beat, startBeat, endBeat) || inEndPhase(beat, endBeat, postBeats) ) { 
+            animator.sineWave(beat, progress, wallSide, {10, 10, 10});
         }
     }
 };
@@ -90,6 +90,177 @@ class InteractiveAnimationCommand {
     virtual int getVal() {
         return 0;
     }
+};
+
+/*
+to keep track of animation state when it persists over a few beats is messy. there is also a lot of duplicated behaviour between implementations.
+i could muddle with inheritance, but what i think i actually want is a standalone class that i can go "hey figure out the logic of whether or not
+i'm allowed to render right now". i just take the output of that and animate as i want.
+*/
+
+class MultiBeatStateTracker {
+    public:
+    int lastHitBeat;
+    int relativeBeat;
+    bool started;
+    bool finished;
+    bool killed;
+
+    MultiBeatStateTracker() {
+
+    }
+
+    void init(int _startBeat, int _numBeats, int _beatGap) {
+        startBeat = _startBeat;
+        numBeats = _numBeats;
+        beatGap = _beatGap;
+        endBeat = startBeat + numBeats * beatGap;
+        started = false;
+        killed = false;
+        finished = false;
+        lastHitBeat = _startBeat - _beatGap;
+        relativeBeat = findRelativeBeat(lastHitBeat);
+    }
+ 
+    bool update(int currentBeat, std::vector<playableBeatStatus> beatStates) { //return true if progressed
+        if (reachedLastBeat(currentBeat)) {
+            finished = true;
+            return false;
+        }
+        if (killed) { return false; }
+
+        if (currentBeat >= startBeat - 1) { 
+            started = true; 
+        } else {
+            return false;
+        }
+
+        if (beatInSequenceMissed(beatStates)) {
+            killed = true;
+            lastHitBeat = -1;
+            relativeBeat = -1;
+            return false;
+        }
+
+        int nextHitBeat = nextBeatToHit(currentBeat);
+        bool hit = certainBeatHit(currentBeat, nextHitBeat, beatStates);
+        if (hit) {
+            lastHitBeat = nextHitBeat;
+            relativeBeat = findRelativeBeat(lastHitBeat);
+            return true;
+        } 
+        return false; 
+    }
+
+    int findRelativeBeat(int beat) {
+        //relative beat will be 0 if we are at start, and at n if we have completed sequence of n beats
+        if (lastHitBeat < startBeat) { return -1; }
+        int rel = beat;
+        rel -= startBeat;
+        rel /= beatGap;
+        return rel;
+    }
+
+    private:
+    int startBeat;
+    int numBeats;
+    int beatGap;
+    int endBeat;
+
+    //DUPLICATED CODE, TODO: FIX
+    int getBeatIndex(int beat, std::vector<playableBeatStatus> beatStates) {
+        for (size_t i = 0; i < beatStates.size(); i++) {
+            if (beatStates[i].beatStart == beat) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    bool certainBeatHit(int beat, int checkBeat, std::vector<playableBeatStatus> beatStates) {
+        int index = getBeatIndex(checkBeat, beatStates);
+        if (index == -1) return false;
+
+        playerStatus state = beatStates[index].playerState;
+        if (beat == checkBeat - 1 || beat == checkBeat) { //if just before, exactly at, or just after window for beat
+            if (state == CORRECT_HIT) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool reachedLastBeat(int currentBeat) {
+        return currentBeat >= startBeat + numBeats * beatGap;
+    }
+
+    int nextBeatToHit(int currentBeat) {
+        int next = lastHitBeat + beatGap;
+        return next;
+    }
+
+    
+
+    bool beatInSequenceMissed(std::vector<playableBeatStatus> beatStates) {
+        //check ALL beats from start to end of sequence
+        for (int checkBeat = startBeat; checkBeat <= endBeat; checkBeat += beatGap) {
+            int index = getBeatIndex(checkBeat, beatStates);
+            if (index == -1) { continue; }
+            playerStatus state = beatStates[index].playerState;
+
+            if (state == EARLY_HIT || state == MISS) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+};
+
+class FillTankAnimation : public InteractiveAnimationCommand {
+    int startBeat;
+    int numBeats;
+    int beatGap;
+    Animator animator;
+    MultiBeatStateTracker stateTracker;
+    int timeAtHit;
+
+    public:
+    FillTankAnimation(int _startBeat, int _numBeats, int _beatGap) {
+        startBeat = _startBeat;
+        numBeats = _numBeats;
+        beatGap = _beatGap;
+        animator = Animator();
+        stateTracker.init(startBeat, numBeats, beatGap);
+        timeAtHit = 0;
+    }
+
+    void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) {
+
+        bool newBeat = stateTracker.update(beat, beatStates);
+
+        if ((stateTracker.killed || stateTracker.finished) || !stateTracker.started) { return; }
+
+        if (newBeat) { 
+            timeAtHit = beat * 100 + progress;
+        }
+
+        int now = beat * 100 + progress;
+        animator.fillTank(stateTracker.relativeBeat, now - timeAtHit, numBeats, {0, 20, 20});
+
+        if (stateTracker.relativeBeat == numBeats - 1) { //last beat
+            //animate fun at spot
+            int index = getBeatIndex(stateTracker.lastHitBeat, beatStates);
+            if (index == -1) {return; }
+            Vec2d pos = beatStates[index].startPos;
+            int radius = 20 - progress / 10;
+            animator.dancingStarfish(pos, progress, radius);
+        }
+        
+    }
+
 };
 
 class SlidingStarfishAnimation : public InteractiveAnimationCommand {
@@ -274,6 +445,7 @@ class DiagonalBouncingBallAnimation : public InteractiveAnimationCommand {
     }
 
     //TODO: fix bug where having beatTimeDist > 2 means that a miss/early hit won't always be caught immediately
+    //this can be done by refactoring to use new class
     // beatTimeDist = 2 works, beatTimeDist = 1 is untested
 
     void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) override { 
@@ -412,6 +584,7 @@ class AnimationCommandManager {
     //contains a list of animation commands, to be executed on beats
     private:
     std::vector<InteractiveAnimationCommand*> interactiveAnimationCommands;
+    std::vector<BackgroundAnimationCommand*> backgroundAnimationCommands;
     int beatLookAhead = 2;
 
     public:
@@ -421,14 +594,19 @@ class AnimationCommandManager {
         //InteractiveAnimationCommand* b = new BurstingBeatAnimation(2, 2, {50, 20});
         //InteractiveAnimationCommand* c = new ThrowingBallAnimation(2, {150, 80});
         //InteractiveAnimationCommand* c = new SlidingStarfishAnimation(2);
-        //InteractiveAnimationCommand* c = new DiagonalBouncingBallAnimation(0, 6, 2);
-        InteractiveAnimationCommand* c = new ColourSliderAnimation({0, 6, 12}, 14, {5, 0, 1}, {15, 0, 5}, {0, 50}, {SCREEN_WIDTH, SCREEN_HEIGHT - 50});
+        //InteractiveAnimationCommand* c = new DiagonalBouncingBallAnimation(0, 6, 2)
+        InteractiveAnimationCommand* c = new FillTankAnimation(0, 4, 2);;
+        //InteractiveAnimationCommand* c = new ColourSliderAnimation({0, 6, 12}, 14, {5, 0, 1}, {15, 0, 5}, {0, 50}, {SCREEN_WIDTH, SCREEN_HEIGHT - 50});
         //InteractiveAnimationCommand* c = new DancingStarfishAnimation(0);
         //InteractiveAnimationCommand* d = new DancingStarfishAnimation(2);
         //InteractiveAnimationCommand* e = new DancingStarfishAnimation(4);
         //interactiveAnimationCommands.push_back(a);
         //interactiveAnimationCommands.push_back(b);
+        BackgroundAnimationCommand* a = new SineWaveAnimation(0, 8, direction::TOP);
+         BackgroundAnimationCommand* b = new SineWaveAnimation(0, 8, direction::BOTTOM);
         interactiveAnimationCommands.push_back(c);
+        backgroundAnimationCommands.push_back(a);
+        backgroundAnimationCommands.push_back(b);
         //interactiveAnimationCommands.push_back(d);
     }
 
@@ -447,6 +625,9 @@ class AnimationCommandManager {
         int beat = pos.globalBeat * pos.numSubBeats + pos.subBeat;
         for (size_t i = 0; i < interactiveAnimationCommands.size(); i++) {
             interactiveAnimationCommands[i]->update(beat, pos.subBeatProgress, beatStates, penPos);
+        }
+        for (size_t i = 0; i < backgroundAnimationCommands.size(); i++) {
+            //backgroundAnimationCommands[i]->update(pos.globalBeat, pos.globalBeatProgress);
         }
     }
 

@@ -43,6 +43,8 @@ struct playableBeatStatus {
     Vec2d endPos;
 };
 
+enum class direction { TOP, BOTTOM, LEFT, RIGHT };
+
 #define NUM_SUBLAYERS 10
 #define ANIMATION_BG_LAYER 1 * NUM_SUBLAYERS
 #define ANIMATION_MG_LAYER 2 * NUM_SUBLAYERS
