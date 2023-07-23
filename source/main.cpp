@@ -11,7 +11,36 @@
 #include "vectorShapes.h"
 #include "mathHelpers.h"
 #include "animationCommand.cpp"
+#include <string.h>
+#include <array>
+#include "rhythmPath.cpp"
+#include "beatToHit.cpp"
 
+
+/*
+how to do different levels of tension?
+tracker might have say 3 channels, 1 channel for each level
+song is split into sections which indicates the max level it can have at that point
+also have a number of beats need to get a combo in (eg get every beat in the last 2 bars right) 
+when this combo is completed, you are allowed to move to the next level. if this combo is not achieved, you don't move
+might want some kind of condition for prematurely going down a level, idk
+might also want a second chance to reach this level - like 2 level 2's in a row - and if this is missed you go down again, if reached just stay at level 2
+
+at a higher level, more channels play music and more animations will play. could even have a different hit sound, idk.
+
+need a gui on top screen showing that you are about to move up a level - could show your current combo (counting from start)
+and maybe in a bright colour. or just something flashing and saying "keep your combo". 
+or a loading-bar thing that increases on each hit - indicating building pressure - "explodes" when you hit the next section correctly
+and fizzles out if you lose combo
+
+how is this enforced in code....?
+
+
+
+
+
+*/
+enum tokens {single, nopitch, quart, diagonalBouncingBall, sineWave, top, bottom, slider, half, one, two, three, four};
 
 int main( int argc, char *argv[] )
 {
@@ -126,7 +155,7 @@ int main( int argc, char *argv[] )
 			//audioManager.metronome(1);
 		}
 		if (beatStatus == 2) {
-			audioManager.metronome(2);
+			//audioManager.metronome(2);
 		}
 
 		if (beatStatus > 0) {
@@ -233,7 +262,6 @@ int main( int argc, char *argv[] )
 		iprintf("\x1b[8;1Hbeat .%i.", songPos.globalBeat);
 		iprintf("\x1b[9;1Hbar# %i", songPos.bar);
 		iprintf("\x1b[10;1Hcombo %i", combo);
-		iprintf("\x1b[11;1Hcurr beat ..%i..", val);
 		
 		//iprintf("\x1b[8;1HglobalBeat# %i", songPos.globalBeat);
 		//iprintf("\x1b[9;1HlocalBeat# %i", songPos.localBeat);

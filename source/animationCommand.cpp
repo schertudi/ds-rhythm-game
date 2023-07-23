@@ -9,50 +9,8 @@
 
 
 
-class BackgroundAnimationCommand {
 
-    protected:
-    bool inStartPhase(int beat, int startBeat, int preBeats) {
-        return beat >= startBeat - preBeats && beat < startBeat;
-    }
-
-    bool inActivePhase(int beat, int startBeat, int endBeat) {
-        return beat >= startBeat && beat <= endBeat;
-    }
-
-    bool inEndPhase(int beat, int endBeat, int postBeats) {
-        return beat > endBeat && beat <= endBeat + postBeats;
-    }
-
-    public:
-    virtual void update(int beat, int progress) = 0;
-};
-
-class SineWaveAnimation : public BackgroundAnimationCommand {
-    private:
-    int startBeat;
-    int endBeat;
-    int preBeats = 2;
-    int postBeats = 2;
-    direction wallSide;
-    Animator animator;
-
-    public:
-    SineWaveAnimation(int _startBeat, int _endBeat, direction _wall) { //can customize this with specific parameters
-        startBeat = _startBeat;
-        endBeat = _endBeat;
-        wallSide = _wall;
-        animator = Animator();
-    }
-
-    void update(int beat, int progress) override {
-        if (inStartPhase(beat, startBeat, preBeats) || inActivePhase(beat, startBeat, endBeat) || inEndPhase(beat, endBeat, postBeats) ) { 
-            animator.sineWave(beat, progress, wallSide, {10, 10, 10});
-        }
-    }
-};
-
-class InteractiveAnimationCommand {
+class AnimationCommand {
     protected:
 
     bool inStartPhase(int beat, int startBeat, int preBeats) {
@@ -91,6 +49,32 @@ class InteractiveAnimationCommand {
         return 0;
     }
 };
+
+class SineWaveAnimation : public AnimationCommand {
+    private:
+    int startBeat;
+    int endBeat;
+    int preBeats = 2;
+    int postBeats = 2;
+    direction wallSide;
+    Animator animator;
+
+    public:
+    SineWaveAnimation(int _startBeat, int _endBeat, direction _wall) { //can customize this with specific parameters
+        startBeat = _startBeat;
+        endBeat = _endBeat;
+        wallSide = _wall;
+        animator = Animator();
+    }
+
+    void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) override {
+        if (inStartPhase(beat, startBeat, preBeats) || inActivePhase(beat, startBeat, endBeat) || inEndPhase(beat, endBeat, postBeats) ) { 
+            animator.sineWave(beat, progress, wallSide, {10, 10, 10});
+        }
+    }
+};
+
+
 
 /*
 to keep track of animation state when it persists over a few beats is messy. there is also a lot of duplicated behaviour between implementations.
@@ -219,7 +203,7 @@ class MultiBeatStateTracker {
 
 };
 
-class FillTankAnimation : public InteractiveAnimationCommand {
+class FillTankAnimation : public AnimationCommand {
     int startBeat;
     int numBeats;
     int beatGap;
@@ -263,7 +247,7 @@ class FillTankAnimation : public InteractiveAnimationCommand {
 
 };
 
-class SlidingStarfishAnimation : public InteractiveAnimationCommand {
+class SlidingStarfishAnimation : public AnimationCommand {
     int startBeat;
     int endBeat;
     Vec2d startPos;
@@ -298,7 +282,7 @@ class SlidingStarfishAnimation : public InteractiveAnimationCommand {
 
 };
 
-class ThrowingBallAnimation : public InteractiveAnimationCommand {
+class ThrowingBallAnimation : public AnimationCommand {
     int startBeat;
     int endBeat;
     Vec2d startPos;
@@ -337,7 +321,7 @@ class ThrowingBallAnimation : public InteractiveAnimationCommand {
 
 };
 
-class ColourSliderAnimation : public InteractiveAnimationCommand {
+class ColourSliderAnimation : public AnimationCommand {
     int absoluteStartBeat;
     int absoluteEndBeat;
     int startBeat;
@@ -408,7 +392,7 @@ class ColourSliderAnimation : public InteractiveAnimationCommand {
 
 };
 
-class DiagonalBouncingBallAnimation : public InteractiveAnimationCommand {
+class DiagonalBouncingBallAnimation : public AnimationCommand {
     private:
     int startBeat;
     int numBeats;
@@ -504,21 +488,21 @@ class DiagonalBouncingBallAnimation : public InteractiveAnimationCommand {
     }
 };
 
-class BurstingBeatAnimation : public InteractiveAnimationCommand {
+class BurstingBeatAnimation : public AnimationCommand {
     private:
     int startBeat;
     int endBeat;
     int preBeats = 4;
     int postBeats = 2;
-    Vec2d pos;
+    //Vec2d pos;
     Animator animator; //does not actually need to be a class
     int offset;
 
     public:
-    BurstingBeatAnimation(int _startBeat, int _endBeat, Vec2d _pos) { //can customize this with specific parameters
+    BurstingBeatAnimation(int _startBeat, int _endBeat) { //can customize this with specific parameters
         startBeat = _startBeat;
         endBeat = _endBeat;
-        pos = _pos;
+        //pos = _pos;
         animator = Animator();
         offset = 0;
     }
@@ -527,6 +511,7 @@ class BurstingBeatAnimation : public InteractiveAnimationCommand {
         int index = getBeatIndex(startBeat, beatStates);
         if (index == -1) return;
         playerStatus state = beatStates[index].playerState;
+        Vec2d pos = beatStates[index].startPos;
 
         if (state == playerStatus::IDLE || state == playerStatus::READY_TO_HIT) {
             animator.shakingObject(beat, progress, startBeat - preBeats, startBeat, pos);
@@ -539,7 +524,7 @@ class BurstingBeatAnimation : public InteractiveAnimationCommand {
     }
 };
 
-class DancingStarfishAnimation : public InteractiveAnimationCommand {
+class DancingStarfishAnimation : public AnimationCommand {
     private:
     int startBeat;
     Animator animator; //does not actually need to be a class
@@ -583,8 +568,8 @@ class DancingStarfishAnimation : public InteractiveAnimationCommand {
 class AnimationCommandManager {
     //contains a list of animation commands, to be executed on beats
     private:
-    std::vector<InteractiveAnimationCommand*> interactiveAnimationCommands;
-    std::vector<BackgroundAnimationCommand*> backgroundAnimationCommands;
+    std::vector<AnimationCommand*> animationCommands;
+    //std::vector<BackgroundAnimationCommand*> backgroundAnimationCommands;
     int beatLookAhead = 2;
 
     public:
@@ -595,18 +580,18 @@ class AnimationCommandManager {
         //InteractiveAnimationCommand* c = new ThrowingBallAnimation(2, {150, 80});
         //InteractiveAnimationCommand* c = new SlidingStarfishAnimation(2);
         //InteractiveAnimationCommand* c = new DiagonalBouncingBallAnimation(0, 6, 2)
-        InteractiveAnimationCommand* c = new FillTankAnimation(0, 4, 2);;
+        AnimationCommand* c = new FillTankAnimation(0, 4, 2);;
         //InteractiveAnimationCommand* c = new ColourSliderAnimation({0, 6, 12}, 14, {5, 0, 1}, {15, 0, 5}, {0, 50}, {SCREEN_WIDTH, SCREEN_HEIGHT - 50});
         //InteractiveAnimationCommand* c = new DancingStarfishAnimation(0);
         //InteractiveAnimationCommand* d = new DancingStarfishAnimation(2);
         //InteractiveAnimationCommand* e = new DancingStarfishAnimation(4);
         //interactiveAnimationCommands.push_back(a);
         //interactiveAnimationCommands.push_back(b);
-        BackgroundAnimationCommand* a = new SineWaveAnimation(0, 8, direction::TOP);
-         BackgroundAnimationCommand* b = new SineWaveAnimation(0, 8, direction::BOTTOM);
-        interactiveAnimationCommands.push_back(c);
-        backgroundAnimationCommands.push_back(a);
-        backgroundAnimationCommands.push_back(b);
+        //BackgroundAnimationCommand* a = new SineWaveAnimation(0, 8, direction::TOP);
+        // BackgroundAnimationCommand* b = new SineWaveAnimation(0, 8, direction::BOTTOM);
+        animationCommands.push_back(c);
+        //backgroundAnimationCommands.push_back(a);
+        //backgroundAnimationCommands.push_back(b);
         //interactiveAnimationCommands.push_back(d);
     }
 
@@ -623,16 +608,13 @@ class AnimationCommandManager {
     void updateInteractiveAnimations(songPosition pos, std::vector<playableBeatStatus> beatStates, Vec2d penPos) {
         //ask commands to update themselves if their time is right
         int beat = pos.globalBeat * pos.numSubBeats + pos.subBeat;
-        for (size_t i = 0; i < interactiveAnimationCommands.size(); i++) {
-            interactiveAnimationCommands[i]->update(beat, pos.subBeatProgress, beatStates, penPos);
-        }
-        for (size_t i = 0; i < backgroundAnimationCommands.size(); i++) {
-            //backgroundAnimationCommands[i]->update(pos.globalBeat, pos.globalBeatProgress);
+        for (size_t i = 0; i < animationCommands.size(); i++) {
+            animationCommands[i]->update(beat, pos.subBeatProgress, beatStates, penPos);
         }
     }
 
     int getVal() {
-        return interactiveAnimationCommands[0]->getVal();
+        return animationCommands[0]->getVal();
     }
 
 };

@@ -1,3 +1,4 @@
+#pragma once
 #include "vectorShapes.h"
 #include "audioManager.cpp"
 #include "constants.h"
@@ -146,8 +147,8 @@ class BeatToSlide : public BeatInteractable {
     int startY;
     int endX;
     int endY;
-    int startRadius = 15;
-    int slideRadius = 30;
+    const int startRadius = 15;
+    const int slideRadius = 30;
     int lengthInBeats;
     int noteLength;
     int pitch;
