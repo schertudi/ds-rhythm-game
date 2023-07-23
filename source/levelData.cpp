@@ -92,7 +92,9 @@ i think might be better to do a list of strings.... less processing to do and ho
 
 */
 
+#pragma once
 
+#include "levelData.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -101,273 +103,306 @@ i think might be better to do a list of strings.... less processing to do and ho
 #include "animationCommand.cpp"
 #include "noteDefinitions.h"
 #include "constants.h"
+#include "debugTools.h"
 
+namespace levelData {
+    namespace { //anonymous namespace encapsulates functions so other files don't see them
 
-std::vector<std::string> splitWords(std::string sentence) {
-    std::cout << "split words: \n";
-    std::string word = "";
-    std::vector<std::string> words;
-    for (size_t i=0; i < sentence.length(); i++) {
-        if (sentence[i] == ' ' || sentence[i] == ',') {
-            words.push_back(word);
-            word = "";
-        } else {
-            word += sentence[i];
+    std::vector<std::string> splitWords(std::string sentence) { //will always have length of at least 1 due to ""
+        std::string word = "";
+        std::vector<std::string> words;
+        for (size_t i=0; i < sentence.length(); i++) {
+            if (sentence[i] == ' ' || sentence[i] == ',') {
+                words.push_back(word);
+                word = "";
+            } else {
+                word += sentence[i];
+            }
+            
         }
-        
-    }
-    words.push_back(word);
-    return words;
-}
-
-int strToInt(std::string str) {
-    return std::stoi(str, nullptr, 10);
-}
-
-
-int getPitch(std::string pitchStr) {
-    //note is something in form of "c3, fs2, db4"
-    if (pitchStr == "monotone") {
-        return 0;
-    }
-    std::string noteStr;
-    std::string octaveStr;
-    if (pitchStr.length() == 2) {
-        noteStr = pitchStr.substr(0, 1);
-        octaveStr = pitchStr[1];
-    } else if (pitchStr.length() == 3) {
-        noteStr = pitchStr.substr(0, 2);
-        octaveStr = pitchStr[2];
-    } else {
-        //error
-        return -1;
-    }
-    
-    //so ugly, but at least it's straightforward..
-    int noteInt;
-    if (noteStr == "c") { noteInt = NOTE_C; } 
-    else if (noteStr == "cs") { noteInt = NOTE_CS; } 
-    else if (noteStr == "db") { noteInt = NOTE_Db; }
-    else if (noteStr == "d") { noteInt = NOTE_Db; }
-    else if (noteStr == "ds") { noteInt = NOTE_DS; }
-    else if (noteStr == "eb") { noteInt = NOTE_Eb; }
-    else if (noteStr == "e") { noteInt = NOTE_E; }
-    else if (noteStr == "f") { noteInt = NOTE_F; }
-    else if (noteStr == "fs") { noteInt = NOTE_FS; }
-    else if (noteStr == "gb") { noteInt = NOTE_Gb; }
-    else if (noteStr == "g") { noteInt = NOTE_G; }
-    else if (noteStr == "gs") { noteInt = NOTE_GS; }
-    else if (noteStr == "ab") { noteInt = NOTE_Ab; }
-    else if (noteStr == "a") { noteInt = NOTE_A; }
-    else if (noteStr == "as") { noteInt = NOTE_AS; }
-    else if (noteStr == "bb") { noteInt = NOTE_Bb; }
-    else if (noteStr == "b") { noteInt = NOTE_B; }
-    else { return -1; }
-
-    int octaveInt;
-    if (octaveStr == "0") { octaveInt = OCT_0; }
-    else if (octaveStr == "1") { octaveInt = OCT_1; }
-    else if (octaveStr == "2") { octaveInt = OCT_2; }
-    else if (octaveStr == "3") { octaveInt = OCT_3; }
-    else if (octaveStr == "4") { octaveInt = OCT_4; }
-    else if (octaveStr == "5") { octaveInt = OCT_5; }
-    else if (octaveStr == "6") { octaveInt = OCT_6; }
-    else { return -1; }
-
-    return noteInt * octaveInt;
-}
-
-int getSoundLength(std::string str) {
-    if (str == "quart") { return QUART_BEAT; }
-    else if (str == "half") { return HALF_BEAT; }
-    else if (str == "one") { return ONE_BEAT; }
-    else if (str == "two") { return TWO_BEAT; }
-    else if (str == "three") { return THREE_BEAT; }
-    else if (str == "four") { return FOUR_BEAT; }
-    else { return -1; }
-}
-
-direction getDirection(std::string str) {
-    if (str == "top") { return direction::TOP; }
-    else if (str == "bottom") { return direction::BOTTOM; }
-    else if (str == "left") { return direction::LEFT; }
-    else if (str == "right") { return direction::RIGHT; }
-    return direction::NONE; //error
-}
-
-
-BeatInteractable* parseBeatConfigSection(std::string config, int currentBeat) {
-    /*
-    possible inputs:
-    single beatPos {pitch|monotone} audioLength
-    slider beatStart beatEnd beatLength {pitch|monotone} audioLength
-    pitch is something in form of "c3", "fs2"
-    what do we return? probably a beatEntry, or could just cut to the chase and make beatInteractables. depends on memory i guess.
-    might be simpler to just do a beatInteractable.
-    */
-    
-    std::vector<std::string> split = splitWords(config);
-
-    if (split[0] == "single") {
-        int x = strToInt(split[1]);
-        int y = strToInt(split[2]);
-        int pitch = getPitch(split[3]); //would need to convert this if not nopitch, todo
-        int soundLength = getSoundLength(split[4]); //need to convert to enum or const 
-        BeatToHit* newBeat = new BeatToHit(currentBeat, x, y, soundLength, pitch);
-        std::cout << "single pitch=" << pitch << " length " << soundLength << "\n"; 
-        return newBeat;
-    } 
-    else if (split[0] == "slider") {
-        int startX = strToInt(split[1]);
-        int startY = strToInt(split[2]);
-        int endX = strToInt(split[3]);
-        int endY = strToInt(split[4]);
-        int numBeats = strToInt(split[5]); //add current beat to this
-        int pitch = getPitch(split[6]);
-        int soundLength = getSoundLength(split[7]);
-        std::cout << "slider beat x1=" << startX << " y1=" << startY << " x2=" << endX << " y2=" <<endY << " endBeat=" << numBeats << "\n"; 
-        BeatToSlide* newBeat = new BeatToSlide(currentBeat, currentBeat + numBeats,
-                startX, startY, endX, endY, 
-                soundLength, pitch);
-        return newBeat;
-        
-    }
-    //error!
-    return nullptr;
-}
-
-AnimationCommand* parseAnimationConfigSection(std::string config, int startBeat) { 
-    /*
-    possible inputs:
-    sineWave direction beatLength
-    fillTank numBeats beatGap
-    slideStarfish
-    throwBall landPos
-    colourSlider startColour endColour beatsList (how do we do this??? F)
-    diagonalBall numBeats beatGap
-    burstingBeat
-    dancingStarfish
-
-    return AnimationCommand* created using specific class requested
-    */
-    
-    std::vector<std::string> split = splitWords(config);
-    if (split[0] == "sineWave") {
-        direction dir = direction::TOP; //need to convert to directional enum from split
-        int beatLength = strToInt(split[2]);
-        AnimationCommand* anim = new SineWaveAnimation(startBeat, startBeat + beatLength, dir);
-        return anim;
-    } 
-    else if (split[0] == "fillTank") {
-        int numBeats = strToInt(split[1]);
-        int beatGap = strToInt(split[2]);
-        AnimationCommand* anim = new FillTankAnimation(startBeat, numBeats, beatGap);
-        return anim;
-    } 
-    else if (split[0] == "slideStarfish") {
-        //just spawn with starting beat
-        AnimationCommand* anim = new SlidingStarfishAnimation(startBeat);
-        return anim;
-    } 
-    else if (split[0] == "throwBall") {
-        int landX = strToInt(split[1]);
-        int landY = strToInt(split[2]);
-        AnimationCommand* anim = new ThrowingBallAnimation(startBeat, {landX, landY});
-        return anim;
-    } 
-    else if (split[0] == "diagonalBall") {
-        int numBeats = strToInt(split[1]);
-        int beatGap = strToInt(split[2]);
-        AnimationCommand* anim = new DiagonalBouncingBallAnimation(startBeat, numBeats, beatGap);
-        return anim;
-    } 
-    else if (split[0] == "burstingBeat") {
-        AnimationCommand* anim = new BurstingBeatAnimation(startBeat, startBeat + 1);
-        return anim;
-    } 
-    else if (split[0] == "dancingStarfish") {
-        AnimationCommand* anim = new DancingStarfishAnimation(startBeat);
-        return anim;
-    }
-    return nullptr;
-}
-
-void parseLine(std::vector<std::string> configs, int beat, std::vector<BeatInteractable*> interacts, std::vector<AnimationCommand*> animations) {
-    /*
-    takes input such as {"single 10,10 nopitch quart", "diagonalBouncingBall 8 2", "sineWave top 2"}
-    i guess add these to their respective lists
-    so first item (beat config) goes to a list owned by rhythmPath (maybe pass it in?)
-    and remaining items will be added to list for animationCommand
-    */
-
-    BeatInteractable* i = parseBeatConfigSection(configs[0], beat);
-    if (i) {
-        interacts.push_back(i);
-    } else {
-        //error
+        words.push_back(word);
+        return words;
     }
 
-    for (size_t i = 1; i < configs.size(); i++) {
-        AnimationCommand* a = parseAnimationConfigSection(configs[i], beat);
-        if (i) {
-            animations.push_back(a);
+    int strToInt(std::string str) {
+        //might be good to check inputs here (currently crashes on bad input), but ds doesn't like to compile with try/catch and i am too scared to change defaults
+        return std::stoi(str, nullptr, 10);
+    }
+
+    int getPitch(std::string pitchStr) {
+        //note is something in form of "c3, fs2, db4"
+        if (pitchStr == "monotone") {
+            return 0;
+        }
+        std::string noteStr;
+        std::string octaveStr;
+        if (pitchStr.length() == 2) {
+            noteStr = pitchStr.substr(0, 1);
+            octaveStr = pitchStr[1];
+        } else if (pitchStr.length() == 3) {
+            noteStr = pitchStr.substr(0, 2);
+            octaveStr = pitchStr[2];
         } else {
             //error
+            Debugger::error("bad pitch %s", pitchStr.c_str());
+            return -1;
         }
+        
+        //so ugly, but at least it's straightforward..
+        int noteInt;
+        if (noteStr == "c") { noteInt = NOTE_C; } 
+        else if (noteStr == "cs") { noteInt = NOTE_CS; } 
+        else if (noteStr == "db") { noteInt = NOTE_Db; }
+        else if (noteStr == "d") { noteInt = NOTE_Db; }
+        else if (noteStr == "ds") { noteInt = NOTE_DS; }
+        else if (noteStr == "eb") { noteInt = NOTE_Eb; }
+        else if (noteStr == "e") { noteInt = NOTE_E; }
+        else if (noteStr == "f") { noteInt = NOTE_F; }
+        else if (noteStr == "fs") { noteInt = NOTE_FS; }
+        else if (noteStr == "gb") { noteInt = NOTE_Gb; }
+        else if (noteStr == "g") { noteInt = NOTE_G; }
+        else if (noteStr == "gs") { noteInt = NOTE_GS; }
+        else if (noteStr == "ab") { noteInt = NOTE_Ab; }
+        else if (noteStr == "a") { noteInt = NOTE_A; }
+        else if (noteStr == "as") { noteInt = NOTE_AS; }
+        else if (noteStr == "bb") { noteInt = NOTE_Bb; }
+        else if (noteStr == "b") { noteInt = NOTE_B; }
+        else { 
+            Debugger::error("bad pitch %s", pitchStr.c_str());
+            return -1; 
+        }
+
+        int octaveInt;
+        if (octaveStr == "0") { octaveInt = OCT_0; }
+        else if (octaveStr == "1") { octaveInt = OCT_1; }
+        else if (octaveStr == "2") { octaveInt = OCT_2; }
+        else if (octaveStr == "3") { octaveInt = OCT_3; }
+        else if (octaveStr == "4") { octaveInt = OCT_4; }
+        else if (octaveStr == "5") { octaveInt = OCT_5; }
+        else if (octaveStr == "6") { octaveInt = OCT_6; }
+        else { 
+            Debugger::error("bad pitch %s", pitchStr.c_str());
+            return -1; 
+        }
+
+        return noteInt * octaveInt;
     }
 
-}
-
-struct beatsInBar { //literally just exists to make the type less of a mouthful as is repeated a lot
-    std::vector<std::vector<std::string>> beatConfigs;
-};
-
-struct barConfig {
-    beatsInBar bar;
-    int energyLevel=-1; //-1 here means just continue from previous
-};
-
-
-void parseSong(std::vector<barConfig> song, std::vector<BeatInteractable*> interacts, std::vector<AnimationCommand*> animations) {
-    int beat = 0;
-    for (size_t i = 0; i < song.size(); i++) {
-        for (size_t j = 0; j < song[i].bar.beatConfigs.size(); j++) {
-            parseLine(song[i].bar.beatConfigs[j], beat, interacts, animations);
-            beat++;
-        }
+    int getSoundLength(std::string str) {
+        if (str == "quart") { return QUART_BEAT; }
+        else if (str == "half") { return HALF_BEAT; }
+        else if (str == "one") { return ONE_BEAT; }
+        else if (str == "two") { return TWO_BEAT; }
+        else if (str == "three") { return THREE_BEAT; }
+        else if (str == "four") { return FOUR_BEAT; }
+        Debugger::error("bad len %s", str.c_str());
+        return -1;
     }
 
-}
+    direction getDirection(std::string str) {
+        if (str == "top") { return direction::TOP; }
+        else if (str == "bottom") { return direction::BOTTOM; }
+        else if (str == "left") { return direction::LEFT; }
+        else if (str == "right") { return direction::RIGHT; }
+        Debugger::error("bad dir %s", str.c_str());
+        return direction::NONE; //error
+    }
 
+    BeatInteractable* parseBeatConfigSection(std::string config, int startBeat) {
+        /*
+        possible inputs:
+        single beatPos {pitch|monotone} audioLength
+        slider beatStart beatEnd beatLength {pitch|monotone} audioLength
+        pitch is something in form of "c3", "fs2"
+        what do we return? probably a beatEntry, or could just cut to the chase and make beatInteractables. depends on memory i guess.
+        might be simpler to just do a beatInteractable.
+        */
+        
+        std::vector<std::string> split = splitWords(config);
 
-void setup() {
-    beatsInBar bar1 = {{
-        {"single 10,10 monotone quart"},
-	    {"single 20,10 monotone half", "burstingBeat"},
-	    {"slider 2 30,10 50,10 fs3 quart"},
-	    {"none"}
-    }};
+        if (split[0] == "none") { //allowed to not define an interaction on this beat, just have to be explicit
+            return nullptr; 
+        }
 
-    std::vector<barConfig> song = {
-        {bar1, 1}
+        if (split[0] == "single") {
+            if (split.size() != 5) {
+                Debugger::error("tokens != 5 b%i: %s", startBeat, config.c_str());
+                return nullptr;
+            }
+            int x = strToInt(split[1]);
+            int y = strToInt(split[2]);
+            int pitch = getPitch(split[3]); //would need to convert this if not nopitch, todo
+            int soundLength = getSoundLength(split[4]); //need to convert to enum or const 
+            BeatToHit* newBeat = new BeatToHit(startBeat, x, y, soundLength, pitch);
+            return newBeat;
+        } 
+        else if (split[0] == "slider") {
+            if (split.size() != 8) {
+                Debugger::error("tokens != 8 b%i: %s", startBeat, config.c_str());
+                return nullptr;
+            }
+            int startX = strToInt(split[1]);
+            int startY = strToInt(split[2]);
+            int endX = strToInt(split[3]);
+            int endY = strToInt(split[4]);
+            int numBeats = strToInt(split[5]); //add current beat to this
+            int pitch = getPitch(split[6]);
+            int soundLength = getSoundLength(split[7]);
+            BeatToSlide* newBeat = new BeatToSlide(startBeat, startBeat + numBeats,
+                    startX, startY, endX, endY, 
+                    soundLength, pitch);
+            return newBeat;
+            
+        }
+        //error!
+        Debugger::error("bad b%i: %s", startBeat, config.c_str());
+        return nullptr;
+    }
+
+    AnimationCommand* parseAnimationConfigSection(std::string config, int startBeat) { 
+        /*
+        possible inputs:
+        sineWave direction beatLength
+        fillTank numBeats beatGap
+        slideStarfish
+        throwBall landPos
+        colourSlider startColour endColour beatsList (how do we do this??? F)
+        diagonalBall numBeats beatGap
+        burstingBeat
+        dancingStarfish
+
+        return AnimationCommand* created using specific class requested
+        */
+        
+        std::vector<std::string> split = splitWords(config);
+        if (split[0] == "sineWave" && split.size() == 3) {
+            direction dir = getDirection(split[1]); //need to convert to directional enum from split
+            int beatLength = strToInt(split[2]);
+            AnimationCommand* anim = new SineWaveAnimation(startBeat, startBeat + beatLength, dir);
+            return anim;
+        } 
+        else if (split[0] == "fillTank" && split.size() == 3) {
+            int numBeats = strToInt(split[1]);
+            int beatGap = strToInt(split[2]);
+            AnimationCommand* anim = new FillTankAnimation(startBeat, numBeats, beatGap);
+            return anim;
+        } 
+        else if (split[0] == "slideStarfish" && split.size() == 1) {
+            //just spawn with starting beat
+            AnimationCommand* anim = new SlidingStarfishAnimation(startBeat);
+            return anim;
+        } 
+        else if (split[0] == "throwBall" && split.size() == 3) {
+            int landX = strToInt(split[1]);
+            int landY = strToInt(split[2]);
+            AnimationCommand* anim = new ThrowingBallAnimation(startBeat, {landX, landY});
+            return anim;
+        } 
+        else if (split[0] == "diagonalBouncingBall" && split.size() == 3) {
+            int numBeats = strToInt(split[1]);
+            int beatGap = strToInt(split[2]);
+            AnimationCommand* anim = new DiagonalBouncingBallAnimation(startBeat, numBeats, beatGap);
+            return anim;
+        } 
+        else if (split[0] == "burstingBeat" && split.size() == 1) {
+            AnimationCommand* anim = new BurstingBeatAnimation(startBeat, startBeat + 1);
+            return anim;
+        } 
+        else if (split[0] == "dancingStarfish" && split.size() == 1) {
+            AnimationCommand* anim = new DancingStarfishAnimation(startBeat);
+            return anim;
+        }
+        Debugger::error("bad anim b%i: %s", startBeat, config.c_str());
+        return nullptr;
+    }
+
+    void parseLine(std::vector<std::string> configs, int beat, std::vector<BeatInteractable*>* interacts, std::vector<AnimationCommand*>* animations) {
+        /*
+        takes input such as {"single 10,10 nopitch quart", "diagonalBouncingBall 8 2", "sineWave top 2"}
+        i guess add these to their respective lists
+        so first item (beat config) goes to a list owned by rhythmPath (maybe pass it in?)
+        and remaining items will be added to list for animationCommand
+        */
+
+        BeatInteractable* i = parseBeatConfigSection(configs[0], beat);
+        if (i) {
+            interacts->push_back(i);
+        } //nullptr is valid return state (if none specified) so don't do anything if not
+
+        for (size_t i = 1; i < configs.size(); i++) {
+            AnimationCommand* a = parseAnimationConfigSection(configs[i], beat);
+            if (a) {
+                animations->push_back(a);
+            } else {
+                Debugger::print("no anim on b%i from i=%i", beat, i); //nonexistent animtion should be skipped, nullptr indicates invalid input
+                return;
+            }
+        }
+
+    }
+
+    struct beatsInBar { //literally just exists to make the type less of a mouthful as is repeated a lot
+        std::vector<std::vector<std::string>> beatConfigs;
     };
 
-    std::vector<BeatInteractable*> interacts;
-    std::vector<AnimationCommand*> animations;
+    struct barConfig {
+        beatsInBar bar;
+        int energyLevel=-1; //-1 here means just continue from previous
+    };
 
-    parseSong(song, interacts, animations);
-    //the ideal.. an interacts populated with beats and animations list with commands
-    //now good fucking luck testing this crap on the ds
-    //pls make a proper logger + other debug tools.
+    void parseSong(std::vector<barConfig> song, std::vector<BeatInteractable*>* interacts, std::vector<AnimationCommand*>* animations) {
+        int beat = 0;
+        for (size_t i = 0; i < song.size(); i++) {
+            for (size_t j = 0; j < song[i].bar.beatConfigs.size(); j++) {
+                parseLine(song[i].bar.beatConfigs[j], beat, interacts, animations);
+                beat++;
+            }
+        }
+
+    }
+
+    }
+
+    void setup() {
+        //Debugger::error("hi");
+        //Debugger::error("invalid pitch %s", "sex");
+        //getDirection("top");
+        //parseAnimationConfigSection("xxx", 1);
+
+        
+        beatsInBar bar1 = {{
+            {"single 10,10 monotone quart"},
+            {"single 20,10 monotone half", "burstingBeat"},
+            {"slider 2 30,10 50,10 fs3 quart", "sineWave top 3"},
+            {"none"}
+        }};
+
+        std::vector<barConfig> song = {
+            {bar1, 1}
+        };
+
+        //init on heap as these will contain a fair amount of data; 1+ objs need to be made for every subbeat that will be hit or have an animation
+        std::vector<BeatInteractable*>* interacts = new std::vector<BeatInteractable*>();
+        std::vector<AnimationCommand*>* animations = new std::vector<AnimationCommand*>();
+
+        parseSong(song, interacts, animations);
+        //parseLine({"single 10,10 monotone quart", "i 8 2", "sineWave top 2"}, 1, interacts, animations);
+        Debugger::print("interacts: %i", interacts->size());
+        Debugger::print("anims: %i", animations->size());
+        
+        //the ideal.. an interacts populated with beats and animations list with commands
+        //now good fucking luck testing this crap on the ds
+        //pls make a proper logger + other debug tools.
+    }
+
+
+    /*
+    int main() {
+        //parseBeatConfigSection("single 10,10 nopitch quart");
+        //parseBeatConfigSection("slider 10,10 20,10 2 nopitch quart");
+        std::vector<BeatInteractable*> interacts;
+        std::vector<AnimationCommand*> animations;
+        parseLine({"single 10,10 nopitch quart", "diagonalBouncingBall 8 2", "sineWave top 2"}, 1, interacts, animations);
+    }
+    */
 }
-
-
-/*
-int main() {
-    //parseBeatConfigSection("single 10,10 nopitch quart");
-    //parseBeatConfigSection("slider 10,10 20,10 2 nopitch quart");
-    std::vector<BeatInteractable*> interacts;
-    std::vector<AnimationCommand*> animations;
-    parseLine({"single 10,10 nopitch quart", "diagonalBouncingBall 8 2", "sineWave top 2"}, 1, interacts, animations);
-}
-*/

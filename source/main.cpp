@@ -15,6 +15,8 @@
 #include <array>
 #include "rhythmPath.cpp"
 #include "beatToHit.cpp"
+#include "debugTools.h"
+#include "levelData.h"
 
 
 /*
@@ -70,6 +72,12 @@ int main( int argc, char *argv[] )
 	Animator animator = Animator();
 
 	int combo = 0;
+	Debugger::resetErrorMessage();
+
+	//getPitch("c3");
+	levelData::setup();
+	//creates list of BeatInteractable* which should be given to rhythmPath (need to tweak a few things to get this to work)
+	//and AnimationCommand* which should be given to animationCommandManager
 	
 
 	//mmLoad( MOD_FLATOUTLIES );
@@ -138,9 +146,11 @@ int main( int argc, char *argv[] )
 	}
 
 	*/
-
 	while(1)
 	{
+		Debugger::resetLines();
+		
+
 		scanKeys();
 		int key = keysHeld();
 
@@ -258,20 +268,15 @@ int main( int argc, char *argv[] )
 
 		consoleClear();
 		int fineBeat = songPos.globalBeat * songPos.numSubBeats + songPos.subBeat;
-		//iprintf("\x1b[8;1Htime .%i.", fineBeat * 100 + songPos.subBeatProgress);
-		iprintf("\x1b[8;1Hbeat .%i.", songPos.globalBeat);
-		iprintf("\x1b[9;1Hbar# %i", songPos.bar);
-		iprintf("\x1b[10;1Hcombo %i", combo);
+
+		Debugger::framePrint("time .%i.", fineBeat * 100 + songPos.subBeatProgress);
+		Debugger::framePrint("beat .%i.", songPos.globalBeat);
+		Debugger::framePrint("bar# %i", songPos.bar);
+		Debugger::framePrint("combo %i", combo);
 		
-		//iprintf("\x1b[8;1HglobalBeat# %i", songPos.globalBeat);
-		//iprintf("\x1b[9;1HlocalBeat# %i", songPos.localBeat);
-		//iprintf("\x1b[10;1Hbar# %i", songPos.bar);
-		//iprintf("\x1b[11;1Hprogress# %i", songPos.globalBeatProgress);
-		//iprintf("\x1b[12;1H ");
-		//iprintf("\x1b[13;1HsubBeat# %i", songPos.subBeat);
-		//iprintf("\x1b[14;1HsubProgress# %i", songPos.subBeatProgress);
-		//iprintf("\x1b[15;1HfineBeat# %i", songPos.localBeat * songPos.numSubBeats + songPos.subBeat);
-		//iprintf("\x1b[11;1Hcombo# %i", path.getCombo());
+
+
+		Debugger::render();
 
 
 		glFlush(0);
