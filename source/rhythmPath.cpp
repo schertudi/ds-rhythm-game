@@ -9,17 +9,7 @@
 #include <iostream>
 #include "constants.h"
 #include "noteDefinitions.h"
-
-struct beatEntry {
-    int beatStart;
-    int beatEnd;
-    int x;
-    int y;
-    int pitch = 0;
-    int length = 1;
-    int endX = x;
-    int endY = y;
-};
+#include "debugTools.h"
 
 class RhythmPath {
     /*
@@ -28,35 +18,20 @@ class RhythmPath {
     private:
     int beatLookAhead;
     int margin; // if we are 10% close to beat or 10% past this is still correct
-    
-    //simple test
-    std::vector<beatEntry> bar1 = {
-        {0, 0, 20, 50, NOTE_FS * OCT_3, QUART_BEAT, 20, 80},
-        {2, 2, 50, 50, NOTE_FS * OCT_3, QUART_BEAT, 50, 20},
-        {4, 4, 80, 50, NOTE_FS * OCT_3, QUART_BEAT, 50, 20},
-        {6, 6, 110, 50, NOTE_FS * OCT_3, QUART_BEAT, 50, 20}
-    };
-
-    std::vector<beatEntry> bar2 = {
-        //{2, 6, 20, 20, NOTE_C * OCT_3, QUART_BEAT, 50, 20}
-        {4, 6, 80, 20, NOTE_FS * OCT_3, QUART_BEAT, 80, 50},
-    };    
-
-    std::vector<std::vector<beatEntry>> beatMap = {
-        bar1
-    };
-
-
+    std::vector<BeatInteractable*> beatInteractObjs;
     std::vector<BeatInteractable*> spawnedBeats;
 
     public:
-    RhythmPath(int _lookahead, int _margin) {
+    RhythmPath(int _lookahead, int _margin, std::vector<BeatInteractable*> _beatInteractObjs) {
         beatLookAhead = _lookahead;
         margin = _margin;
+        beatInteractObjs = _beatInteractObjs;
     }
    
     void onBeat(songPosition pos) {
-        trySpawnBeat(pos);
+        activateCurrentBeat(pos);
+        //is just based on a timer, will remove items from list 5 beats after they were deactivated
+		killInactiveBeats(pos.globalBeat, 5);
     }
 
     std::vector<playableBeatStatus> getBeatStates(songPosition pos, int touchX, int touchY) {
@@ -122,17 +97,6 @@ class RhythmPath {
         }
     }
 
-    void killInactiveBeats(int currBeat, int timeout) {
-        for (size_t i = 0; i < spawnedBeats.size(); i++) {
-            if (!spawnedBeats[i]->isActive()) {
-                int length = spawnedBeats[i]->getTimeSinceDeactivate(currBeat);
-                if (length > timeout) {
-                    spawnedBeats.erase(spawnedBeats.begin() + i);
-                    i--;
-                }
-            }
-        }
-    }
 
     void playSound(int beatStart, AudioManager man) {
         for (size_t i = 0; i < spawnedBeats.size(); i++) {
@@ -144,47 +108,40 @@ class RhythmPath {
 
     private:
 
-    //a beat starting at beat n should be spawned at beat n - beatLookAhead. if this < 0 then beatManager needs to lower its starting beat.
-    void trySpawnBeat(songPosition pos) {
-        int bar = pos.bar;
-        int globalBeat = (pos.globalBeat + beatLookAhead) * pos.numSubBeats + pos.subBeat;
+    void activateCurrentBeat(songPosition pos) {
+        //get current index based on beat
+        //slightly quicker method would be to do direct lookup beatInteractObjs[beat], but this relies on a bunch of nullpointers which takes more space
+        int beat = (pos.globalBeat + beatLookAhead) * pos.numSubBeats + pos.subBeat;
 
-        if (bar >= (int)beatMap.size()) {
-            return;
-        }
-        std::vector<beatEntry> beats = beatMap[bar];
+        BeatInteractable* b = nullptr;
+        for (size_t i = 0; i < beatInteractObjs.size(); i++) { //could start from last known index, just adds a little more complexity codewise
+            if (beatInteractObjs[i]->getStartBeat() == beat) {
+                b = beatInteractObjs[i];
+                break;
+            }
 
-        int index = -1;
-        for (size_t i = 0; i < beats.size(); i++) {
-            if (localToGlobalBeat(beats[i].beatStart, pos) == globalBeat) {
-                index = i;
+            if (beatInteractObjs[i]->getStartBeat() > beat) { //won't find anything now but can break out of loop a bit sooner
                 break;
             }
         }
 
-        if (index == -1) {
+        if (!b) {
             return;
         }
 
-        if (beats[index].beatEnd == beats[index].beatStart) {
-            // spawn beat
-            BeatToHit* newBeat = new BeatToHit(globalBeat, beats[index].x, beats[index].y, beats[index].length, beats[index].pitch);
-            newBeat->setPlayerState(playerStatus::IDLE);
-            spawnedBeats.push_back(newBeat);
-            return;
-        } else {
-            //spawn beatLine
-            BeatToSlide* newBeat = new BeatToSlide(globalBeat, globalBeat + (beats[index].beatEnd - beats[index].beatStart),
-                beats[index].x, beats[index].y, beats[index].endX, beats[index].endY, beats[index].length, beats[index].pitch);
-            spawnedBeats.push_back(newBeat);
-        }
-
+        spawnedBeats.push_back(b);
     }
 
-    //might be good to move this somewhere else if other classes need to use
-    int localToGlobalBeat(int localBeat, songPosition pos) {
-        int localToGlobal = localBeat + pos.bar * pos.numBeatsInBar * pos.numSubBeats;
-        return localToGlobal;
+    void killInactiveBeats(int currBeat, int timeout) {
+        for (size_t i = 0; i < spawnedBeats.size(); i++) {
+            if (!spawnedBeats[i]->isActive()) {
+                int length = spawnedBeats[i]->getTimeSinceDeactivate(currBeat);
+                if (length > timeout) {
+                    spawnedBeats.erase(spawnedBeats.begin() + i);
+                    i--;
+                }
+            }
+        }
     }
 
     //duplicated code in these functions, but they're dense enough as it is so want to avoid extra branching
@@ -212,8 +169,9 @@ class RhythmPath {
             if (!status.isHit || status.timingProgress > 200) {
                 return playerStatus::CORRECT_LIFT;
             }
-        }
-        return os; //should never run... might be good to have some kind of warning system TODO
+        } 
+
+        return os; //happens if no change in state detected
     }
 
     playerStatus getPlayerStatusForSliderBeat(playableBeatStatus status) {

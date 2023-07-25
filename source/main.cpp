@@ -64,88 +64,19 @@ int main( int argc, char *argv[] )
 	CircleEffect pointerEffect(800, 20);
 	touchPosition touch;
 	TouchTracker touchTracker(0);
-	BeatManager beatManager(120, 2); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
+	int numSubBeats = 2;
+	int numBeatsInBar = 4;
+	BeatManager beatManager(120, numSubBeats); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
 	//it also goes insane with a bpm like (70, 2).
-	RhythmPath path = RhythmPath(2, 60);
 
-	AnimationCommandManager animationCommandManager = AnimationCommandManager();
-	Animator animator = Animator();
+	levelData level = levelDataParser::setup(numSubBeats * numBeatsInBar);
+	RhythmPath path = RhythmPath(2, 60, level.beatInteracts);
+
+	AnimationCommandManager animationCommandManager = AnimationCommandManager(level.animations);
 
 	int combo = 0;
 	Debugger::resetErrorMessage();
 
-	//getPitch("c3");
-	levelData::setup();
-	//creates list of BeatInteractable* which should be given to rhythmPath (need to tweak a few things to get this to work)
-	//and AnimationCommand* which should be given to animationCommandManager
-	
-
-	//mmLoad( MOD_FLATOUTLIES );
-
-	//mmStart( MOD_FLATOUTLIES, MM_PLAY_LOOP );
-
-	//
-
-	/*
-	while (1) {
-		//draw fun animations........
-		scanKeys();
-		int key = keysHeld();
-
-		frame++;
-
-		beatManager.updateBeat(frame);
-		songPosition songPos = beatManager.getSongPosition();
-
-		//animator.bouncingBallStraight(songPos.globalBeatProgress, songPos.globalBeat, 2);
-		//animator.bouncingBallDiagonal(songPos.globalBeatProgress, songPos.globalBeat);
-		//animator.fillTank(songPos.globalBeatProgress, songPos.globalBeat, 6);
-		//animator.sineWave(songPos.globalBeatProgress, songPos.globalBeat, 6, 1);
-		//animator.sineWave(songPos.globalBeatProgress, songPos.globalBeat, 6, 2, true);
-		//animator.dancingStarfish(songPos.globalBeatProgress, songPos.globalBeat);
-		//animator.slidingStarfish({100,50}, {200, 100}, {30, 30}, songPos.globalBeatProgress, songPos.globalBeat);
-		//animator.shakingObject(songPos.globalBeat, songPos.globalBeatProgress);
-
-		
-		//if (songPos.globalBeat < 2) {
-		//	animator.shakingObject(songPos.globalBeat, songPos.globalBeatProgress);
-		//} else {
-		//	if (songPos.globalBeat == 2 && songPos.globalBeatProgress < 20) animator.hitObject(songPos.globalBeatProgress);
-		//	else animator.burstingObject(songPos.globalBeat - 2, songPos.globalBeatProgress);
-		//}
-		
-		
-		
-
-		
-		int x = SCREEN_WIDTH / 2;
-		int y = -100;
-		if(key & KEY_TOUCH) {
-			touchRead(&touch);
-			x = touch.px;
-			y = touch.py;
-		} else {
-		}
-
-		animationCommandManager.updateAnimations(songPos.globalBeat, songPos.globalBeatProgress);
-
-		//animator.slidingStarfish({20, 20}, {100, 50}, {x, y}, songPos.globalBeatProgress, songPos.globalBeat);
-		//animator.colourChangeSlider(20, SCREEN_HEIGHT - 60, 60, {30, 15, 0}, {25, 0, 15}, {x, y});
-		//animator.slidingCircle({20, 20}, {100, 50}, {x, y});
-		//animator.flyingBall(songPos.globalBeatProgress, songPos.globalBeat, {0, 50}, {200, 100}, 20);
-		//throwObject.draw(frame, songPos.globalBeat, songPos.globalBeatProgress);
-
-
-		iprintf("\x1b[8;1Hbeat# .%i.", songPos.globalBeat);
-		iprintf("\x1b[11;1Hprogress# .%i.", songPos.globalBeatProgress);
-		
-
-		glFlush(0);
-
-		swiWaitForVBlank();
-	}
-
-	*/
 	while(1)
 	{
 		Debugger::resetLines();
@@ -251,8 +182,7 @@ int main( int argc, char *argv[] )
 			
 		}
 
-		//is just based on a timer, will remove items from list 5 beats after they were deactivated
-		path.killInactiveBeats(songPos.globalBeat, 5);
+		
 
 		path.renderBeats(songPos);
 
@@ -260,10 +190,6 @@ int main( int argc, char *argv[] )
 		touchTracker.deleteOldEntries();
 
 		animationCommandManager.updateInteractiveAnimations(songPos, beatStates, {penX, penY});
-		//animator.bouncingBallDiagonal(songPos.globalBeatProgress, songPos.globalBeat);
-		//touchTracker.drawTrail(frame);
-		//animator.fillTank(songPos.globalBeat, songPos.globalBeatProgress, 4, {0, 20, 20});
-		int val = animationCommandManager.getVal();
 
 
 		consoleClear();

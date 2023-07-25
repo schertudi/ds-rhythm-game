@@ -93,8 +93,16 @@ i think might be better to do a list of strings.... less processing to do and ho
 */
 
 #pragma once
+#include <utility>
+#include "beatToHit.cpp"
+#include "animationCommand.cpp"
 
-namespace levelData {
-    void setup();
+struct levelData {
+	std::vector<BeatInteractable*> beatInteracts;
+	std::vector<AnimationCommand*> animations;
+};
+
+namespace levelDataParser {
+    levelData setup(int numBeatsInBar);
 }
 

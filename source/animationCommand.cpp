@@ -565,6 +565,7 @@ class DancingStarfishAnimation : public AnimationCommand {
     }
 };
 
+//this does not really need to be a class anymore actually
 class AnimationCommandManager {
     //contains a list of animation commands, to be executed on beats
     private:
@@ -573,37 +574,9 @@ class AnimationCommandManager {
     int beatLookAhead = 2;
 
     public:
-    AnimationCommandManager() {
-        //initialize animation commands
-        //InteractiveAnimationCommand* a = new BurstingBeatAnimation(0, 0, {20, 20});
-        //InteractiveAnimationCommand* b = new BurstingBeatAnimation(2, 2, {50, 20});
-        //InteractiveAnimationCommand* c = new ThrowingBallAnimation(2, {150, 80});
-        //InteractiveAnimationCommand* c = new SlidingStarfishAnimation(2);
-        //InteractiveAnimationCommand* c = new DiagonalBouncingBallAnimation(0, 6, 2)
-        AnimationCommand* c = new FillTankAnimation(0, 4, 2);;
-        //InteractiveAnimationCommand* c = new ColourSliderAnimation({0, 6, 12}, 14, {5, 0, 1}, {15, 0, 5}, {0, 50}, {SCREEN_WIDTH, SCREEN_HEIGHT - 50});
-        //InteractiveAnimationCommand* c = new DancingStarfishAnimation(0);
-        //InteractiveAnimationCommand* d = new DancingStarfishAnimation(2);
-        //InteractiveAnimationCommand* e = new DancingStarfishAnimation(4);
-        //interactiveAnimationCommands.push_back(a);
-        //interactiveAnimationCommands.push_back(b);
-        //BackgroundAnimationCommand* a = new SineWaveAnimation(0, 8, direction::TOP);
-        // BackgroundAnimationCommand* b = new SineWaveAnimation(0, 8, direction::BOTTOM);
-        animationCommands.push_back(c);
-        //backgroundAnimationCommands.push_back(a);
-        //backgroundAnimationCommands.push_back(b);
-        //interactiveAnimationCommands.push_back(d);
+    AnimationCommandManager(std::vector<AnimationCommand*> _animationCommands) {
+        animationCommands = _animationCommands;
     }
-
-    /*
-    void updateBackgroundAnimations(songPosition pos) {
-        //ask commands to update themselves if their time is right
-        int beat = pos.globalBeat * pos.numSubBeats + pos.subBeat - 2 * pos.numSubBeats;
-        for (size_t i = 0; i < bgAnimationCommands.size(); i++) {
-            bgAnimationCommands[i].update(beat, pos.subBeatProgress);
-        }
-    }
-    */
 
     void updateInteractiveAnimations(songPosition pos, std::vector<playableBeatStatus> beatStates, Vec2d penPos) {
         //ask commands to update themselves if their time is right
@@ -611,10 +584,6 @@ class AnimationCommandManager {
         for (size_t i = 0; i < animationCommands.size(); i++) {
             animationCommands[i]->update(beat, pos.subBeatProgress, beatStates, penPos);
         }
-    }
-
-    int getVal() {
-        return animationCommands[0]->getVal();
     }
 
 };
