@@ -6,11 +6,14 @@
 #include "animator.cpp"
 #include "mathHelpers.h"
 #include "vectorShapes.h"
-
+#include "debugTools.h"
 
 
 
 class AnimationCommand {
+    private:
+    int energyLevel;
+
     protected:
 
     bool inStartPhase(int beat, int startBeat, int preBeats) {
@@ -41,7 +44,15 @@ class AnimationCommand {
         return -1;
     }
 
+    void setEnergyLevel(int l) {
+        energyLevel = l;
+    }
+
     public:
+
+    int getEnergyLevel() {
+        return energyLevel;
+    }
 
     virtual void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) = 0;
 
@@ -60,11 +71,12 @@ class SineWaveAnimation : public AnimationCommand {
     Animator animator;
 
     public:
-    SineWaveAnimation(int _startBeat, int _endBeat, direction _wall) { //can customize this with specific parameters
+    SineWaveAnimation(int energy, int _startBeat, int _endBeat, direction _wall) { //can customize this with specific parameters
         startBeat = _startBeat;
         endBeat = _endBeat;
         wallSide = _wall;
         animator = Animator();
+        setEnergyLevel(energy);
     }
 
     void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) override {
@@ -212,13 +224,14 @@ class FillTankAnimation : public AnimationCommand {
     int timeAtHit;
 
     public:
-    FillTankAnimation(int _startBeat, int _numBeats, int _beatGap) {
+    FillTankAnimation(int energy, int _startBeat, int _numBeats, int _beatGap) {
         startBeat = _startBeat;
         numBeats = _numBeats;
         beatGap = _beatGap;
         animator = Animator();
         stateTracker.init(startBeat, numBeats, beatGap);
         timeAtHit = 0;
+        setEnergyLevel(energy);
     }
 
     void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) {
@@ -256,9 +269,10 @@ class SlidingStarfishAnimation : public AnimationCommand {
     Vec2d lastKnownPenPos;
 
     public:
-    SlidingStarfishAnimation(int _startBeat) { //can customize this with specific parameters
+    SlidingStarfishAnimation(int energy, int _startBeat) { //can customize this with specific parameters
         startBeat = _startBeat;
         animator = Animator();
+        setEnergyLevel(energy);
     }
 
     void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) override {
@@ -291,13 +305,14 @@ class ThrowingBallAnimation : public AnimationCommand {
     Animator animator;
 
     public:
-    ThrowingBallAnimation(int _startBeat, Vec2d _landPos) { //can customize this with specific parameters
+    ThrowingBallAnimation(int energy, int _startBeat, Vec2d _landPos) { //can customize this with specific parameters
         startBeat = _startBeat;
         //endBeat = _endBeat;
         //bstartPos = _startPos;
         //sliderEndPos = _sliderEndPos;
         landPos = _landPos;
         animator = Animator();
+        setEnergyLevel(energy);
     }
 
     void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) override {
@@ -340,7 +355,7 @@ class ColourSliderAnimation : public AnimationCommand {
     Vec2d rectBottom;
 
     public:
-    ColourSliderAnimation(std::vector<int> _startBeats, int _endBeat, Colour _startColour, Colour _endColour, Vec2d _rectTop, Vec2d _rectBottom) { //can customize this with specific parameters
+    ColourSliderAnimation(int energy, std::vector<int> _startBeats, int _endBeat, Colour _startColour, Colour _endColour, Vec2d _rectTop, Vec2d _rectBottom) { //can customize this with specific parameters
         startColour = _startColour;
         endColour = _endColour;
         animator = Animator();
@@ -352,6 +367,7 @@ class ColourSliderAnimation : public AnimationCommand {
         absoluteEndBeat = _endBeat;
         rectTop = _rectTop;
         rectBottom = _rectBottom;
+        setEnergyLevel(energy);
     }
 
     void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) override {
@@ -414,7 +430,7 @@ class DiagonalBouncingBallAnimation : public AnimationCommand {
     bool killed;
 
     public:
-    DiagonalBouncingBallAnimation(int _startBeat, int _numBeats, int _beatTimeDist) { //can customize this with specific parameters
+    DiagonalBouncingBallAnimation(int energy, int _startBeat, int _numBeats, int _beatTimeDist) { //can customize this with specific parameters
         startBeat = _startBeat;
         numBeats = _numBeats;
         beatTimeDist = _beatTimeDist;
@@ -426,6 +442,7 @@ class DiagonalBouncingBallAnimation : public AnimationCommand {
         startPlaying = false;
         stopPlaying = false;
         killed = false;
+        setEnergyLevel(energy);
     }
 
     //TODO: fix bug where having beatTimeDist > 2 means that a miss/early hit won't always be caught immediately
@@ -499,12 +516,13 @@ class BurstingBeatAnimation : public AnimationCommand {
     int offset;
 
     public:
-    BurstingBeatAnimation(int _startBeat, int _endBeat) { //can customize this with specific parameters
+    BurstingBeatAnimation(int energy, int _startBeat, int _endBeat) { //can customize this with specific parameters
         startBeat = _startBeat;
         endBeat = _endBeat;
         //pos = _pos;
         animator = Animator();
         offset = 0;
+        setEnergyLevel(energy);
     }
 
     void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) override {
@@ -533,10 +551,11 @@ class DancingStarfishAnimation : public AnimationCommand {
     int shrinkTime = 200;
 
     public:
-    DancingStarfishAnimation(int _startBeat) { //can customize this with specific parameters
+    DancingStarfishAnimation(int energy, int _startBeat) { //can customize this with specific parameters
         startBeat = _startBeat;
         timeAtLift = 0;
         setTime = false;
+        setEnergyLevel(energy);
     }
 
     void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) override {
@@ -578,10 +597,14 @@ class AnimationCommandManager {
         animationCommands = _animationCommands;
     }
 
-    void updateInteractiveAnimations(songPosition pos, std::vector<playableBeatStatus> beatStates, Vec2d penPos) {
+    void updateAnimations(songPosition pos, std::vector<playableBeatStatus> beatStates, Vec2d penPos, int energyLevel) {
         //ask commands to update themselves if their time is right
         int beat = pos.globalBeat * pos.numSubBeats + pos.subBeat;
         for (size_t i = 0; i < animationCommands.size(); i++) {
+            if (animationCommands[i]->getEnergyLevel() > energyLevel) {
+                Debugger::framePrint("skip %i", energyLevel);
+                continue;
+            }
             animationCommands[i]->update(beat, pos.subBeatProgress, beatStates, penPos);
         }
     }

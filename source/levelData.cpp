@@ -119,18 +119,31 @@ namespace levelDataParser {
 
         std::vector<barConfig> getLevelData() {
             beatsInBar bar1 = {{
-                {"single 10,10 monotone quart", "burstingBeat"}
+                {"single 20,50 monotone quart", "1 burstingBeat"},
+                {"none"},
+                {"single 50,50 monotone quart"},
+                {"none"},
+                {"single 80,50 monotone quart"},
+                {"none"},
+                {"single 110,50 monotone quart"} 
+                //number before animation indicates lowest possible level needed for this (TODO)
             }};
 
             beatsInBar bar2 = {{
-                {"single 10,10 monotone quart", "burstingBeat"},
+                {"single 20,100 monotone quart", "1 burstingBeat", "2 sineWave top 4", "3 sineWave bottom 4"},
                 {"none"},
-                {"single 50,10 monotone half", "burstingBeat"}
+                {"single 50,100 monotone quart", "2 burstingBeat"},
+                {"none"},
+                {"single 80,100 monotone quart", "3 burstingBeat"},
+                {"none"},
+                {"single 110,100 monotone quart", "1 burstingBeat"} 
             }};
 
             std::vector<barConfig> song = {
                 {bar1, 1}, 
-                {bar2, 1}
+                {bar2, 1},
+                {bar1, 1}, 
+                {bar2, 1},
             };
 
             return song;
@@ -303,41 +316,49 @@ namespace levelDataParser {
             */
             
             std::vector<std::string> split = splitWords(config);
-            if (split[0] == "sineWave" && split.size() == 3) {
-                direction dir = getDirection(split[1]); //need to convert to directional enum from split
-                int beatLength = strToInt(split[2]);
-                AnimationCommand* anim = new SineWaveAnimation(startBeat, startBeat + beatLength, dir);
+
+            if (split[1] == "sineWave" && split.size() == 4) {
+                int energy = strToInt(split[0]);
+                direction dir = getDirection(split[2]); //need to convert to directional enum from split
+                int beatLength = strToInt(split[3]);
+                AnimationCommand* anim = new SineWaveAnimation(energy, startBeat, startBeat + beatLength, dir);
                 return anim;
             } 
-            else if (split[0] == "fillTank" && split.size() == 3) {
-                int numBeats = strToInt(split[1]);
-                int beatGap = strToInt(split[2]);
-                AnimationCommand* anim = new FillTankAnimation(startBeat, numBeats, beatGap);
+            else if (split[1] == "fillTank" && split.size() == 4) {
+                int energy = strToInt(split[0]);
+                int numBeats = strToInt(split[2]);
+                int beatGap = strToInt(split[3]);
+                AnimationCommand* anim = new FillTankAnimation(energy, startBeat, numBeats, beatGap);
                 return anim;
             } 
-            else if (split[0] == "slideStarfish" && split.size() == 1) {
+            else if (split[1] == "slideStarfish" && split.size() == 2) {
                 //just spawn with starting beat
-                AnimationCommand* anim = new SlidingStarfishAnimation(startBeat);
+                int energy = strToInt(split[0]);
+                AnimationCommand* anim = new SlidingStarfishAnimation(energy, startBeat);
                 return anim;
             } 
-            else if (split[0] == "throwBall" && split.size() == 3) {
-                int landX = strToInt(split[1]);
-                int landY = strToInt(split[2]);
-                AnimationCommand* anim = new ThrowingBallAnimation(startBeat, {landX, landY});
+            else if (split[1] == "throwBall" && split.size() == 4) {
+                int energy = strToInt(split[0]);
+                int landX = strToInt(split[2]);
+                int landY = strToInt(split[3]);
+                AnimationCommand* anim = new ThrowingBallAnimation(energy, startBeat, {landX, landY});
                 return anim;
             } 
-            else if (split[0] == "diagonalBouncingBall" && split.size() == 3) {
-                int numBeats = strToInt(split[1]);
-                int beatGap = strToInt(split[2]);
-                AnimationCommand* anim = new DiagonalBouncingBallAnimation(startBeat, numBeats, beatGap);
+            else if (split[1] == "diagonalBouncingBall" && split.size() == 4) {
+                int energy = strToInt(split[0]);
+                int numBeats = strToInt(split[2]);
+                int beatGap = strToInt(split[3]);
+                AnimationCommand* anim = new DiagonalBouncingBallAnimation(energy, startBeat, numBeats, beatGap);
                 return anim;
             } 
-            else if (split[0] == "burstingBeat" && split.size() == 1) {
-                AnimationCommand* anim = new BurstingBeatAnimation(startBeat, startBeat + 1);
+            else if (split[1] == "burstingBeat" && split.size() == 2) {
+                int energy = strToInt(split[0]);
+                AnimationCommand* anim = new BurstingBeatAnimation(energy, startBeat, startBeat + 1);
                 return anim;
             } 
-            else if (split[0] == "dancingStarfish" && split.size() == 1) {
-                AnimationCommand* anim = new DancingStarfishAnimation(startBeat);
+            else if (split[1] == "dancingStarfish" && split.size() == 2) {
+                int energy = strToInt(split[0]);
+                AnimationCommand* anim = new DancingStarfishAnimation(energy, startBeat);
                 return anim;
             }
             Debugger::error("bad anim b%i: %s", startBeat, config.c_str());

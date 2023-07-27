@@ -69,12 +69,13 @@ int main( int argc, char *argv[] )
 	BeatManager beatManager(120, numSubBeats); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
 	//it also goes insane with a bpm like (70, 2).
 
-	levelData level = levelDataParser::setup(numSubBeats * numBeatsInBar);
-	RhythmPath path = RhythmPath(2, 60, level.beatInteracts);
+	levelData levelData = levelDataParser::setup(numSubBeats * numBeatsInBar);
+	RhythmPath path = RhythmPath(2, 60, levelData.beatInteracts);
 
-	AnimationCommandManager animationCommandManager = AnimationCommandManager(level.animations);
+	AnimationCommandManager animationCommandManager = AnimationCommandManager(levelData.animations);
 
 	int combo = 0;
+	int energyLevel = 3; //1 lowest, highest is 3
 	Debugger::resetErrorMessage();
 
 	while(1)
@@ -189,7 +190,7 @@ int main( int argc, char *argv[] )
 
 		touchTracker.deleteOldEntries();
 
-		animationCommandManager.updateInteractiveAnimations(songPos, beatStates, {penX, penY});
+		animationCommandManager.updateAnimations(songPos, beatStates, {penX, penY}, energyLevel);
 
 
 		consoleClear();
