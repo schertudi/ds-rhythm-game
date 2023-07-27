@@ -74,6 +74,8 @@ int main( int argc, char *argv[] )
 
 	AnimationCommandManager animationCommandManager = AnimationCommandManager(levelData.animations);
 
+	std::vector<int> perBarEnergyLevel = levelData.perBarEnergyLevel;
+
 	int combo = 0;
 	int energyLevel = 3; //1 lowest, highest is 3
 	Debugger::resetErrorMessage();
@@ -92,6 +94,12 @@ int main( int argc, char *argv[] )
 		songPosition songPos = beatManager.getSongPosition();
 		int beat = songPos.globalBeat;
 		//int progress = songPos.globalBeatProgress;
+
+		if (songPos.bar >= 0 && (size_t)songPos.bar < perBarEnergyLevel.size()) {
+			//will update slightly too late (early animations won't show), unsure if should fix or not
+			energyLevel = perBarEnergyLevel[songPos.bar];
+		}
+		
 
 		if (beatStatus == 1) {
 			//audioManager.metronome(1);
@@ -200,6 +208,7 @@ int main( int argc, char *argv[] )
 		Debugger::framePrint("beat .%i.", songPos.globalBeat);
 		Debugger::framePrint("bar# %i", songPos.bar);
 		Debugger::framePrint("combo %i", combo);
+		Debugger::framePrint("energy %i", energyLevel);
 		
 
 

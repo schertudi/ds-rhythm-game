@@ -121,7 +121,7 @@ namespace levelDataParser {
             beatsInBar bar1 = {{
                 {"single 20,50 monotone quart", "1 burstingBeat"},
                 {"none"},
-                {"single 50,50 monotone quart"},
+                {"single 50,50 monotone quart", "2 burstingBeat"},
                 {"none"},
                 {"single 80,50 monotone quart"},
                 {"none"},
@@ -136,14 +136,14 @@ namespace levelDataParser {
                 {"none"},
                 {"single 80,100 monotone quart", "3 burstingBeat"},
                 {"none"},
-                {"single 110,100 monotone quart", "1 burstingBeat"} 
+                {"single 110,100 monotone quart"} 
             }};
 
             std::vector<barConfig> song = {
-                {bar1, 1}, 
-                {bar2, 1},
-                {bar1, 1}, 
-                {bar2, 1},
+                {bar2, 1}, 
+                {bar2},
+                {bar2, 2}, 
+                {bar2, 3},
             };
 
             return song;
@@ -413,10 +413,22 @@ namespace levelDataParser {
         //apparently vectors store info on heap anyway? ok..
         std::vector<BeatInteractable*> interacts = std::vector<BeatInteractable*>();
         std::vector<AnimationCommand*> animations = std::vector<AnimationCommand*>();
+        std::vector<int> energyLevels = std::vector<int>();
+
+        int currEnergy = 1;
+        for (size_t i = 0; i < song.size(); i++) {
+            int barEnergy = song[i].energyLevel;
+            if (barEnergy == -1) {
+                barEnergy = currEnergy;
+            } else {
+                currEnergy = barEnergy;
+            }
+            energyLevels.push_back(barEnergy);
+        }
 
         parseSong(song, &interacts, &animations, numBeatsInBar);
 
-        levelData l = {interacts, animations};
+        levelData l = {interacts, animations, energyLevels};
         return l;
     }
 

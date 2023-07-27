@@ -100,6 +100,8 @@ i think might be better to do a list of strings.... less processing to do and ho
 struct levelData {
 	std::vector<BeatInteractable*> beatInteracts;
 	std::vector<AnimationCommand*> animations;
+	//should be able to lookup a bar and get a level. bar is seq of continous ints so can use array
+	std::vector<int> perBarEnergyLevel;
 };
 
 namespace levelDataParser {

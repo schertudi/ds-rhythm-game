@@ -602,7 +602,6 @@ class AnimationCommandManager {
         int beat = pos.globalBeat * pos.numSubBeats + pos.subBeat;
         for (size_t i = 0; i < animationCommands.size(); i++) {
             if (animationCommands[i]->getEnergyLevel() > energyLevel) {
-                Debugger::framePrint("skip %i", energyLevel);
                 continue;
             }
             animationCommands[i]->update(beat, pos.subBeatProgress, beatStates, penPos);
