@@ -17,6 +17,7 @@
 #include "beatToHit.cpp"
 #include "debugTools.h"
 #include "levelData.h"
+#include "energyLevelManager.cpp"
 
 
 /*
@@ -76,6 +77,8 @@ int main( int argc, char *argv[] )
 
 	std::vector<int> perBarEnergyLevel = levelData.perBarEnergyLevel;
 
+	energyLevelManager energyLevelManager;
+
 	int combo = 0;
 	int energyLevel = 3; //1 lowest, highest is 3
 	Debugger::resetErrorMessage();
@@ -120,6 +123,7 @@ int main( int argc, char *argv[] )
 			
 			
 			path.onBeat(songPos);
+			energyLevelManager.newBeat(songPos.globalBeat);
 			
 		}
 
@@ -162,6 +166,7 @@ int main( int argc, char *argv[] )
 				if (status == playerStatus::SLIDER_HIT) { //starting beat, play sound (once)
 					combo += 1;
 					path.playSound(beatStart, audioManager);
+					energyLevelManager.beatHit();
 				}
 				if (status == playerStatus::SLIDER_EARLY_LIFT) {
 					combo = 0;
@@ -171,12 +176,14 @@ int main( int argc, char *argv[] )
 					combo += 1;
 					path.playSound(beatStart, audioManager);
 					path.deactivateBeat(beatStart, songPos.globalBeat);
+					energyLevelManager.beatHit();
 				}
 			} else {
 				//check if hit singular beat on time
 				if (status == playerStatus::CORRECT_HIT) {
 					combo += 1;
 					path.playSound(beatStart, audioManager);
+					energyLevelManager.beatHit();
 				}
 				if (status == playerStatus::CORRECT_LIFT) {
 					path.deactivateBeat(beatStart, songPos.globalBeat);
@@ -187,18 +194,19 @@ int main( int argc, char *argv[] )
 			if (status == playerStatus::MISS) {
 				combo = 0;
 				path.deactivateBeat(beatStart, songPos.globalBeat);
+				energyLevelManager.beatMiss();
 			}
 			
 		}
 
 		
 
-		path.renderBeats(songPos);
+		//path.renderBeats(songPos);
 
 
-		touchTracker.deleteOldEntries();
+		//touchTracker.deleteOldEntries();
 
-		animationCommandManager.updateAnimations(songPos, beatStates, {penX, penY}, energyLevel);
+		//animationCommandManager.updateAnimations(songPos, beatStates, {penX, penY}, energyLevel);
 
 
 		consoleClear();
@@ -209,8 +217,8 @@ int main( int argc, char *argv[] )
 		Debugger::framePrint("bar# %i", songPos.bar);
 		Debugger::framePrint("combo %i", combo);
 		Debugger::framePrint("energy %i", energyLevel);
+		Debugger::framePrint("state %i", energyLevelManager.getCurrState());
 		
-
 
 		Debugger::render();
 
