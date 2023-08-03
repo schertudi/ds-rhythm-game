@@ -17,13 +17,15 @@ I LOVE STATE MACHINES!!
 when the beat's level is changed we forget about this and just set level accordingly (+= if win)
 */
 
+#include "constants.h"
+
 class energyLevelManager {
 
     int powerupCombo = -1;
     bool missedSection = false;
     int powerupSectionStart = -1;
 
-    enum class powerupStates { IDLE, BEFORE, ACTIVATING, ACHIEVED, LOST };
+    
 
     powerupStates currState = powerupStates::IDLE;
 
@@ -42,7 +44,7 @@ class energyLevelManager {
     int getDistToNextLevelChange(int startBeat) { //so say we are at beat 0 and level changes at beat 3, we return 3. if at beat 3 we return 0 (changes now).
         int nextChange = 12;
         int diff = nextChange - startBeat;
-        if (diff < 0) {return 0;}
+        //if (diff < 0) {return 0;}
         return diff;
     }
 
@@ -53,10 +55,18 @@ class energyLevelManager {
         return currState;
     }
 
+    powerupInfo getCurrPowerupInfo () {
+        powerupInfo p;
+        p.currState = currState;
+        p.numBeatsHit = 2;
+        return p;
+    }
+
     void newBeat(int beat) {
 
         int powerupLength = 4; //need 4 beats in a row before level change
         int powerupBeforeLength = 4; //4 beats before this we tell player to prepare
+        int cooldownLength = 4; //how long do we show message before doing nothing
         
         
         int dist = getDistToNextLevelChange(beat);
@@ -71,10 +81,12 @@ class energyLevelManager {
                 currState = powerupStates::ACTIVATING; //warn player
             }
             //need to check if player is getting full combo here
-        } else if (dist == 0) {
+        } else if (dist == 0 || dist > -cooldownLength) {
             //if we didnt lose it we go up a level (maybe if we lost it we go down idk?)
-        } else {
+            currState = powerupStates::ACHIEVED;
+        } else if (dist < -cooldownLength) {
             //error...
+            currState = powerupStates::LOST;
         }
 
     }

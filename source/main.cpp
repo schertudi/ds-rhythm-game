@@ -18,6 +18,7 @@
 #include "debugTools.h"
 #include "levelData.h"
 #include "energyLevelManager.cpp"
+#include "energyLevelGUI.cpp"
 
 
 /*
@@ -78,6 +79,7 @@ int main( int argc, char *argv[] )
 	std::vector<int> perBarEnergyLevel = levelData.perBarEnergyLevel;
 
 	energyLevelManager energyLevelManager;
+	EnergyLevelGUI energyLevelGUI;
 
 	int combo = 0;
 	int energyLevel = 3; //1 lowest, highest is 3
@@ -207,6 +209,8 @@ int main( int argc, char *argv[] )
 		//touchTracker.deleteOldEntries();
 
 		//animationCommandManager.updateAnimations(songPos, beatStates, {penX, penY}, energyLevel);
+		powerupInfo p = energyLevelManager.getCurrPowerupInfo();
+		energyLevelGUI.draw(p, songPos);
 
 
 		consoleClear();

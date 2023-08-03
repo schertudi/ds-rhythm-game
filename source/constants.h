@@ -26,6 +26,7 @@ struct songPosition {
     int subBeatProgress; //used for calculating timings
     int numSubBeats;
     int numBeatsInBar;
+    int time;
 };
 
 enum playerStatus { IDLE, EARLY_HIT, EARLY_LIFT, READY_TO_HIT, CORRECT_HIT, CORRECT_LIFT, SLIDER_HIT, SLIDER_EARLY_LIFT, SLIDER_END, MISS }; 
@@ -44,6 +45,15 @@ struct playableBeatStatus {
 };
 
 enum class direction { NONE=0, TOP, BOTTOM, LEFT, RIGHT };
+
+enum class powerupStates { IDLE, BEFORE, ACTIVATING, ACHIEVED, LOST };
+
+struct powerupInfo {
+    powerupStates currState;
+    int timeAtStateChange;
+    int numBeatsHit;
+    int numBeatsInSection;
+};
 
 #define NUM_SUBLAYERS 10
 #define ANIMATION_BG_LAYER 1 * NUM_SUBLAYERS
