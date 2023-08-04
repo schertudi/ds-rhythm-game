@@ -24,9 +24,9 @@ class EnergyLevelGUI {
             drawBeforeSection(pos.time, p.numBeatsHit);
         } else if (p.currState == powerupStates::ACTIVATING) {
             drawPowerupSection(pos.time, p.numBeatsHit);
-        } else if (p.currState == powerupStates::ACHIEVED) {
+        } else if (p.currState == powerupStates::WIN) {
             drawWinSection(pos.time, p.timeAtStateChange, p.numBeatsHit);
-        } else if (p.currState == powerupStates::LOST) {
+        } else if (p.currState == powerupStates::LOSE) {
             drawFailSection(pos.time, p.timeAtStateChange, p.numBeatsHit);
         } 
         Debugger::framePrint("");

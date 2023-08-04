@@ -63,6 +63,11 @@ class energyLevelManager {
     }
 
     void newBeat(int beat) {
+        //this will be bugged - beat can trigger before window to hit beat ends, what do?
+        //probably means we need to update state in on hit/miss as well, not just here.... probably use it for as little as possible to min duplication
+        //BUT if we dont have anything to hit on first beat of bar.. we should do it here.
+        //so ig we need info about beatmap :( tho was probably necessary anyway
+        //i think for now we just assume last beat switches it.. feels more satisfying that way probably
 
         int powerupLength = 4; //need 4 beats in a row before level change
         int powerupBeforeLength = 4; //4 beats before this we tell player to prepare
@@ -81,12 +86,17 @@ class energyLevelManager {
                 currState = powerupStates::ACTIVATING; //warn player
             }
             //need to check if player is getting full combo here
-        } else if (dist == 0 || dist > -cooldownLength) {
+        } else if (dist == 0) {
+            if (currState == powerupStates::WIN) {
+                currState = powerupStates::WIN_FINISH;
+            } else {
+                currState = powerupStates::LOSE;
+            }
             //if we didnt lose it we go up a level (maybe if we lost it we go down idk?)
-            currState = powerupStates::ACHIEVED;
+            //currState = powerupStates::WIN;
         } else if (dist < -cooldownLength) {
             //error...
-            currState = powerupStates::LOST;
+            currState = powerupStates::IDLE;
         }
 
     }
