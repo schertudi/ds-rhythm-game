@@ -21,13 +21,19 @@ class EnergyLevelGUI {
     public:
     void draw(powerupInfo p, songPosition pos) {
         if (p.currState == powerupStates::BEFORE) {
-            drawBeforeSection(pos.time, p.numBeatsHit);
-        } else if (p.currState == powerupStates::ACTIVATING) {
-            drawPowerupSection(pos.time, p.numBeatsHit);
-        } else if (p.currState == powerupStates::WIN) {
-            drawWinSection(pos.time, p.timeAtStateChange, p.numBeatsHit);
-        } else if (p.currState == powerupStates::LOSE) {
-            drawFailSection(pos.time, p.timeAtStateChange, p.numBeatsHit);
+            drawBeforeSection(p, pos);
+        } 
+        else if (p.currState == powerupStates::JUST_BEFORE) {
+            drawJustBeforeSection(p, pos);
+        }
+        else if (p.currState == powerupStates::GET_COMBO) {
+            drawPowerupSection(p, pos);
+        } 
+        else if (p.currState == powerupStates::WIN) {
+            drawWinSection(p, pos);
+        } 
+        else if (p.currState == powerupStates::LOSE) {
+            drawFailSection(p, pos);
         } 
         Debugger::framePrint("");
     }
@@ -44,26 +50,32 @@ class EnergyLevelGUI {
         Debugger::framePrint(buffer);
     }
 
-    void drawBeforeSection(int currTime, int numComplete) {
+    void drawBeforeSection(powerupInfo p, songPosition pos) {
         Debugger::framePrint("get ready..");
-        printNChars(numComplete, '-');
+        int beatsSinceStart = pos.globalBeat - p.timeAtStateChange;
+        printNChars(beatsSinceStart + 1, '-');
     }
 
-    void drawPowerupSection(int currTime, int numComplete) {
+    void drawJustBeforeSection(powerupInfo p, songPosition pos) {
+        Debugger::framePrint("do your best?");
+        printNChars(p.numBeatsHit, '*');
+    }
+
+    void drawPowerupSection(powerupInfo p, songPosition pos) {
         Debugger::framePrint("do your best!");
-        printNChars(numComplete, '*');
+        printNChars(p.numBeatsHit, '*');
     }
 
     //these should last n beats from time state switched to them
-    void drawFailSection(int currTime, int startTime, int numComplete) {
+    void drawFailSection(powerupInfo p, songPosition pos) {
         Debugger::framePrint("next time...");
-        printNChars(numComplete, '*');
+        printNChars(p.numBeatsHit, '*');
         //need to know how many we got for accurate animation
     }
 
-    void drawWinSection(int currTime, int startTime, int numComplete) {
+    void drawWinSection(powerupInfo p, songPosition pos) {
         Debugger::framePrint("level up!");
-        printNChars(numComplete, '_');
+        printNChars(p.numBeatsHit, '-');
         //need to know how many we got for accurate animation
     }
 

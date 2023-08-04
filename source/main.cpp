@@ -68,7 +68,7 @@ int main( int argc, char *argv[] )
 	TouchTracker touchTracker(0);
 	int numSubBeats = 2;
 	int numBeatsInBar = 4;
-	BeatManager beatManager(120, numSubBeats); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
+	BeatManager beatManager(60, numSubBeats); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
 	//it also goes insane with a bpm like (70, 2).
 
 	levelData levelData = levelDataParser::setup(numSubBeats * numBeatsInBar);
@@ -163,12 +163,13 @@ int main( int argc, char *argv[] )
 			if (status == playerStatus::EARLY_HIT) {
 				combo = 0;
 				path.deactivateBeat(beatStart, songPos.globalBeat);
+				energyLevelManager.beatEarly(beatStart);
 			}
 			if (isSlider) {
 				if (status == playerStatus::SLIDER_HIT) { //starting beat, play sound (once)
 					combo += 1;
 					path.playSound(beatStart, audioManager);
-					energyLevelManager.beatHit();
+					energyLevelManager.beatHit(beatStart);
 				}
 				if (status == playerStatus::SLIDER_EARLY_LIFT) {
 					combo = 0;
@@ -178,14 +179,14 @@ int main( int argc, char *argv[] )
 					combo += 1;
 					path.playSound(beatStart, audioManager);
 					path.deactivateBeat(beatStart, songPos.globalBeat);
-					energyLevelManager.beatHit();
+					energyLevelManager.beatHit(beatStates[i].beatEnd);
 				}
 			} else {
 				//check if hit singular beat on time
 				if (status == playerStatus::CORRECT_HIT) {
 					combo += 1;
 					path.playSound(beatStart, audioManager);
-					energyLevelManager.beatHit();
+					energyLevelManager.beatHit(beatStart);
 				}
 				if (status == playerStatus::CORRECT_LIFT) {
 					path.deactivateBeat(beatStart, songPos.globalBeat);
@@ -196,14 +197,14 @@ int main( int argc, char *argv[] )
 			if (status == playerStatus::MISS) {
 				combo = 0;
 				path.deactivateBeat(beatStart, songPos.globalBeat);
-				energyLevelManager.beatMiss();
+				energyLevelManager.beatMiss(songPos.globalBeat);
 			}
 			
 		}
 
 		
 
-		//path.renderBeats(songPos);
+		path.renderBeats(songPos);
 
 
 		//touchTracker.deleteOldEntries();
@@ -221,7 +222,6 @@ int main( int argc, char *argv[] )
 		Debugger::framePrint("bar# %i", songPos.bar);
 		Debugger::framePrint("combo %i", combo);
 		Debugger::framePrint("energy %i", energyLevel);
-		Debugger::framePrint("state %i", energyLevelManager.getCurrState());
 		
 
 		Debugger::render();

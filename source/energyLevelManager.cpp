@@ -18,16 +18,14 @@ when the beat's level is changed we forget about this and just set level accordi
 */
 
 #include "constants.h"
+#include "debugTools.h"
 
 class energyLevelManager {
 
     int powerupCombo = -1;
     bool missedSection = false;
     int powerupSectionStart = -1;
-
-    
-
-    powerupStates currState = powerupStates::IDLE;
+    powerupInfo p;
 
     void getCurrentBarLevel() { //uses songpos
 
@@ -42,7 +40,7 @@ class energyLevelManager {
     }
 
     int getDistToNextLevelChange(int startBeat) { //so say we are at beat 0 and level changes at beat 3, we return 3. if at beat 3 we return 0 (changes now).
-        int nextChange = 12;
+        int nextChange = 6; //should be last note in seq we have to hit to activate (NOT first beat in next level). breaks if a beat does not exist here.
         int diff = nextChange - startBeat;
         //if (diff < 0) {return 0;}
         return diff;
@@ -51,14 +49,14 @@ class energyLevelManager {
     
 
     public:
-    powerupStates getCurrState() {
-        return currState;
+    energyLevelManager() {
+        p.currState = powerupStates::IDLE;
+        p.timeAtStateChange = 0;
+        p.numBeatsHit = 0;
+        p.numBeatsInSection = 0;
     }
 
     powerupInfo getCurrPowerupInfo () {
-        powerupInfo p;
-        p.currState = currState;
-        p.numBeatsHit = 2;
         return p;
     }
 
@@ -68,60 +66,96 @@ class energyLevelManager {
         //BUT if we dont have anything to hit on first beat of bar.. we should do it here.
         //so ig we need info about beatmap :( tho was probably necessary anyway
         //i think for now we just assume last beat switches it.. feels more satisfying that way probably
+        //think we need another state in transistin from before to hit - warn player they want to hit now, but dont penalise them for not hitting immediately.
 
-        int powerupLength = 4; //need 4 beats in a row before level change
-        int powerupBeforeLength = 4; //4 beats before this we tell player to prepare
+        int powerupLength = 8; //need 4 beats in a row before level change
+        int powerupBeforeLength = 8; //4 beats before this we tell player to prepare
         int cooldownLength = 4; //how long do we show message before doing nothing
         
         
         int dist = getDistToNextLevelChange(beat);
-        if (dist > powerupLength + powerupBeforeLength) {
-            currState = powerupStates::IDLE; //nothing interesting here
+        bool isIdleTime = dist > powerupLength + powerupBeforeLength;
+        bool isBeforeTime = !isIdleTime && dist > powerupLength;
+        bool isJustBeforeTime = dist == powerupBeforeLength;
+        bool isComboTime = dist < powerupBeforeLength && dist > 0;
+        bool isChangeTime = dist == 0;
+        bool isCooldownTime = dist < 0 && dist > -cooldownLength;
+
+
+        if (isIdleTime) {
+            p.currState = powerupStates::IDLE; //nothing interesting here
             return;
-        } else if (dist > powerupLength) {
-            currState = powerupStates::BEFORE; //warn player
-        } else if (dist > 0) {
-            currState = powerupStates::ACTIVATING;
-            if (currState == powerupStates::BEFORE) {
-                currState = powerupStates::ACTIVATING; //warn player
-            }
-            //need to check if player is getting full combo here
-        } else if (dist == 0) {
-            if (currState == powerupStates::WIN) {
-                currState = powerupStates::WIN_FINISH;
-            } else {
-                currState = powerupStates::LOSE;
-            }
-            //if we didnt lose it we go up a level (maybe if we lost it we go down idk?)
-            //currState = powerupStates::WIN;
-        } else if (dist < -cooldownLength) {
-            //error...
-            currState = powerupStates::IDLE;
         }
+        
+        if (isBeforeTime && p.currState != powerupStates::BEFORE) {
+            p.currState = powerupStates::BEFORE; //warn player
+            p.timeAtStateChange = beat;
+            p.numBeatsInSection = powerupBeforeLength;
+            p.numBeatsHit = 0;
+        }
+        if (isJustBeforeTime && p.currState != powerupStates::JUST_BEFORE) {
+            p.currState = powerupStates::JUST_BEFORE;
+            p.numBeatsHit = 0;
+            p.timeAtStateChange = beat;
+            p.numBeatsInSection = powerupLength;
+        } 
+        if (isComboTime && p.currState == powerupStates::JUST_BEFORE) {
+            p.currState = powerupStates::GET_COMBO;
+        }
+        
+        if (p.currState == powerupStates::WIN || p.currState == powerupStates::LOSE) { //there are situations we may not reach this and be stuck forever...
+            if (beat - p.timeAtStateChange > cooldownLength) {
+                p.currState = powerupStates::IDLE;
+            }
+        }
+
+        if (p.currState == powerupStates::GET_COMBO && dist <= 0) { //should not be allowed !!
+            Debugger::error("stuck in state GET_COMBO!");
+        }
+
+        //actually changing level should be dependent on hit/miss so not done at this time
 
     }
 
     //i wonder if we should do an event system for on beat hit/miss? a lot of classes may be intersted in this
     //is that overkill?
-    void beatHit() {
+    void beatHit(int beat) {
         //allows moving up a level if done at right time
         //don't update combo if we didn't get it at very first hit (?) or do we want a second chance
         //probably easiest to demand we get them all right; want combo complete to show on final beat, not before
-        if (missedSection) {
+
+        //i think better to check by beat hit and not specific timings - there are 2 possible beats we could be hitting and 1 is right 1 is not????
+        //or send out beat change a little earlier - like valid beat and not actual beat - because hit/miss should distinguish between
+        //but what seems to be happening is that it's waiting until beat 3 to register hits and im actually on beat 2.8 so what do : (
+        //or can just allow for it a bit earlier i guess ?
+        //nah probably best to pass in info about beat that has been hit, we can see if this is valid or not
+        if (p.currState != powerupStates::GET_COMBO && p.currState != powerupStates::JUST_BEFORE) {
             return;
         }
-        if (powerupCombo == -1) { //just entered
 
+        int dist = getDistToNextLevelChange(beat);
+        Debugger::print("hit at beat %d with dist %d", beat, dist);
+        if (dist == 0) {//hit for next section
+            p.currState = powerupStates::WIN;
+            p.timeAtStateChange = beat;
+        } else {
+            p.numBeatsHit += 1;
         }
     }
 
-    void beatMiss() {
-        //set level to base
-        int beat = 0;
-        int bar = 0;
-        if (isPowerupSection(bar)) {
-            //set level to 1
+    void beatEarly(int beat) {
+        if (p.currState == powerupStates::GET_COMBO || p.currState == powerupStates::JUST_BEFORE) {
+            p.currState = powerupStates::LOSE;
+            p.timeAtStateChange = beat;
         }
+    }
+
+    void beatMiss(int beat) {
+        if (p.currState == powerupStates::GET_COMBO) {
+            p.currState = powerupStates::LOSE;
+            p.timeAtStateChange = beat;
+        }
+        
     }
 
 };

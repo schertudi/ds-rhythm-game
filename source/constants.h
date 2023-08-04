@@ -46,7 +46,7 @@ struct playableBeatStatus {
 
 enum class direction { NONE=0, TOP, BOTTOM, LEFT, RIGHT };
 
-enum class powerupStates { IDLE, BEFORE, ACTIVATING, WIN, LOSE, WIN_FINISH };
+enum class powerupStates { IDLE, BEFORE, JUST_BEFORE, GET_COMBO, WIN, LOSE };
 
 struct powerupInfo {
     powerupStates currState;
