@@ -138,15 +138,16 @@ namespace levelDataParser {
             }};
 
             std::vector<barConfig> song = {
+            //if win combo we incr energy level, if lose we do nothing (or could decr). when energy level drops (eg 3 -> 1) we reset it to new val.
                 {bar2, 1}, 
-                {bar2, 1},
-                {bar2, 1},
+                {bar2},
                 {bar2, 2}, 
-                {bar2, 2},
-                {bar2, 2},
+                {bar2},
+                {bar2},
                 {bar2, 3},
-                {bar2, 3},
-                {bar2, 3},
+                {bar2},
+                {bar2, 1}, 
+                {bar2}, 
             };
 
             return song;

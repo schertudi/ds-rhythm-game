@@ -25,15 +25,16 @@ might be good to write up list of requirements (what can/cannot happen) for more
 #include "levelData.h"
 
 class EnergyLevelManager {
-    const int NUM_POWERUP_BARS = 2;
+    const int NUM_POWERUP_BARS = 1;
     const int WARNING_LENGTH = 8; //measured in subbeats
-    const int COOLDOWN_LENGTH = 8;
+    const int COOLDOWN_LENGTH = 4; //measured in beats
 
     int powerupCombo = -1;
     bool missedSection = false;
     int powerupSectionStart = -1;
     powerupInfo p;
     levelData level;
+    int currEnergyLevel;
 
 
     std::tuple<int, int> getNextLevelChange(int currBeat, songPosition songPos) {
@@ -43,6 +44,7 @@ class EnergyLevelManager {
         but we actually dont leave because we want to find what time the last note of seq hits at. probably also count how many in this bar (seq) for funsies xd
         and dont assume powerupLength = 4 or 8 or anything, can be whatever i want it to be (though defining on a "how many bars" makes sense)
         will need to count backwards to get the beat that changes things then
+        ignore changes where level goes down, only care about it going up eg level 1 to level 2
         */
 
         //find index of next bar that changes levels. say bar 0 has level 1 and bar 1 has level 3, we will set changeBar to 1. 
@@ -50,12 +52,12 @@ class EnergyLevelManager {
         int changeBar = -1;
         for (size_t i = songPos.bar; i < level.perBarEnergyLevel.size(); i++) {
             int currLevel = level.perBarEnergyLevel[i];
-            if (lastLevel != currLevel) {
+            if (lastLevel < currLevel) {
                 changeBar = i;
                 break;
             }
         }
-        Debugger::resetPermanentLines();
+        //Debugger::resetPermanentLines();
         //Debugger::print("change at bar %d curr %d", changeBar, songPos.bar);
 
         //find the last beat player hits before this level change, hitting this after a combo will trigger the change.
@@ -87,6 +89,7 @@ class EnergyLevelManager {
         p.numBeatsHit = 0;
         p.numBeatsInSection = 0;
         level = _levelData;
+        currEnergyLevel = 1;
     }
 
     powerupInfo getCurrPowerupInfo () {
@@ -110,6 +113,11 @@ class EnergyLevelManager {
         bool isBeforeTime = powerupStart - WARNING_LENGTH <= currBeat && currBeat < powerupStart;
         bool isJustBeforeTime = currBeat == powerupStart;
         bool isComboTime = powerupStart < currBeat && currBeat < powerupEnd;
+
+        int barLevel = level.perBarEnergyLevel[songPos.bar];
+        if (barLevel < currEnergyLevel && p.currState != powerupStates::WIN) { //could have a bug here if win screen hides before we go onto next bar - hopefully unlikely
+            currEnergyLevel = barLevel;
+        }
 
 
         if (isIdleTime) {
@@ -173,8 +181,18 @@ class EnergyLevelManager {
         p.numBeatsHit += 1;
         if (registerBeat == powerupEnd) {//hit for next section
             p.currState = powerupStates::WIN;
-            p.timeAtStateChange = registerBeat;
+            p.timeAtStateChange = registerBeat / songPos.numSubBeats; //super vague if beat is granular or not. need some kind of better clarity around this.
             //need to change level to that of the next bar (NOT this current one)
+            int currBar = registerBeat / (songPos.numBeatsInBar * songPos.numSubBeats);
+            int nextBar = currBar + 1;
+
+            if (nextBar >= 0 && (size_t)nextBar < level.perBarEnergyLevel.size()) {
+                //will update slightly too late (early animations won't show), unsure if should fix or not
+                int maxLevel = level.perBarEnergyLevel[nextBar];
+                if (currEnergyLevel < maxLevel) {
+                    currEnergyLevel += 1;
+                }
+            }
         } 
     }
 
@@ -191,6 +209,10 @@ class EnergyLevelManager {
             p.timeAtStateChange = beat;
         }
         
+    }
+
+    int getEnergyLevel() {
+        return currEnergyLevel;
     }
 
 };

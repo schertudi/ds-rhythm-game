@@ -68,7 +68,7 @@ int main( int argc, char *argv[] )
 	TouchTracker touchTracker(0);
 	int numSubBeats = 2;
 	int numBeatsInBar = 4;
-	BeatManager beatManager(60, numSubBeats); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
+	BeatManager beatManager(120, numSubBeats); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
 	//it also goes insane with a bpm like (70, 2).
 
 	levelData levelData = levelDataParser::setup(numSubBeats * numBeatsInBar);
@@ -102,7 +102,7 @@ int main( int argc, char *argv[] )
 
 		if (songPos.bar >= 0 && (size_t)songPos.bar < perBarEnergyLevel.size()) {
 			//will update slightly too late (early animations won't show), unsure if should fix or not
-			energyLevel = perBarEnergyLevel[songPos.bar];
+			//energyLevel = perBarEnergyLevel[songPos.bar];
 		}
 		
 
@@ -208,8 +208,9 @@ int main( int argc, char *argv[] )
 
 
 		//touchTracker.deleteOldEntries();
+		energyLevel = energyLevelManager.getEnergyLevel();
 
-		//animationCommandManager.updateAnimations(songPos, beatStates, {penX, penY}, energyLevel);
+		animationCommandManager.updateAnimations(songPos, beatStates, {penX, penY}, energyLevel);
 		powerupInfo p = energyLevelManager.getCurrPowerupInfo();
 		energyLevelGUI.draw(p, songPos);
 
