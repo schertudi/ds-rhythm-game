@@ -132,17 +132,20 @@ namespace levelDataParser {
             beatsInBar bar2 = {{
                 {"single 20,100 monotone quart", "1 burstingBeat", "2 sineWave top 4", "3 sineWave bottom 4"},
                 {"none"},
-                {"single 50,100 monotone quart", "2 burstingBeat"},
                 {"none"},
-                {"single 80,100 monotone quart", "3 burstingBeat"},
                 {"none"},
-                {"single 110,100 monotone quart"} 
+                {"single 80,100 monotone quart", "3 burstingBeat"}
             }};
 
             std::vector<barConfig> song = {
                 {bar2, 1}, 
-                {bar2},
+                {bar2, 1},
+                {bar2, 1},
                 {bar2, 2}, 
+                {bar2, 2},
+                {bar2, 2},
+                {bar2, 3},
+                {bar2, 3},
                 {bar2, 3},
             };
 

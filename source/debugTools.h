@@ -5,7 +5,9 @@
 
 namespace Debugger {
 
-    void resetLines();
+    void resetFrameLines();
+
+    void resetPermanentLines();
 
     void resetErrorMessage();
 

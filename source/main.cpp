@@ -78,7 +78,7 @@ int main( int argc, char *argv[] )
 
 	std::vector<int> perBarEnergyLevel = levelData.perBarEnergyLevel;
 
-	energyLevelManager energyLevelManager;
+	EnergyLevelManager energyLevelManager = EnergyLevelManager(levelData);
 	EnergyLevelGUI energyLevelGUI;
 
 	int combo = 0;
@@ -87,7 +87,7 @@ int main( int argc, char *argv[] )
 
 	while(1)
 	{
-		Debugger::resetLines();
+		Debugger::resetFrameLines();
 		
 
 		scanKeys();
@@ -125,7 +125,7 @@ int main( int argc, char *argv[] )
 			
 			
 			path.onBeat(songPos);
-			energyLevelManager.newBeat(songPos.globalBeat);
+			energyLevelManager.newBeat(songPos);
 			
 		}
 
@@ -169,7 +169,7 @@ int main( int argc, char *argv[] )
 				if (status == playerStatus::SLIDER_HIT) { //starting beat, play sound (once)
 					combo += 1;
 					path.playSound(beatStart, audioManager);
-					energyLevelManager.beatHit(beatStart);
+					energyLevelManager.beatHit(beatStart, songPos); //note we MIGHT have bugs if using songPos.globalBeat and not beatS
 				}
 				if (status == playerStatus::SLIDER_EARLY_LIFT) {
 					combo = 0;
@@ -179,14 +179,14 @@ int main( int argc, char *argv[] )
 					combo += 1;
 					path.playSound(beatStart, audioManager);
 					path.deactivateBeat(beatStart, songPos.globalBeat);
-					energyLevelManager.beatHit(beatStates[i].beatEnd);
+					energyLevelManager.beatHit(beatStates[i].beatEnd, songPos);
 				}
 			} else {
 				//check if hit singular beat on time
 				if (status == playerStatus::CORRECT_HIT) {
 					combo += 1;
 					path.playSound(beatStart, audioManager);
-					energyLevelManager.beatHit(beatStart);
+					energyLevelManager.beatHit(beatStart, songPos);
 				}
 				if (status == playerStatus::CORRECT_LIFT) {
 					path.deactivateBeat(beatStart, songPos.globalBeat);

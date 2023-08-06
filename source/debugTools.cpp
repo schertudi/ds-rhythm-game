@@ -10,8 +10,12 @@ namespace Debugger {
     std::vector<std::string> permanentLines;
     std::string errorMessage = "";
 
-    void resetLines() {
+    void resetFrameLines() {
         transientLines.clear();
+    }
+
+    void resetPermanentLines() {
+        permanentLines.clear();
     }
 
     void resetErrorMessage() {

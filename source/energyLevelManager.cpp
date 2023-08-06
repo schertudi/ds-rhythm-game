@@ -15,71 +15,101 @@ might even need a few beats before this so interface can update - which is why w
 so we want to see if we are idle, before a powerup, activating a powerup, just finished a powerup, or lost a powerup.
 I LOVE STATE MACHINES!!
 when the beat's level is changed we forget about this and just set level accordingly (+= if win)
+
+might be good to write up list of requirements (what can/cannot happen) for more structured testing.. BUT consider i am lazy and must go to bed
 */
 
+#include <tuple>
 #include "constants.h"
 #include "debugTools.h"
+#include "levelData.h"
 
-class energyLevelManager {
+class EnergyLevelManager {
+    const int NUM_POWERUP_BARS = 2;
+    const int WARNING_LENGTH = 8; //measured in subbeats
+    const int COOLDOWN_LENGTH = 8;
 
     int powerupCombo = -1;
     bool missedSection = false;
     int powerupSectionStart = -1;
     powerupInfo p;
+    levelData level;
 
-    void getCurrentBarLevel() { //uses songpos
 
+    std::tuple<int, int> getNextLevelChange(int currBeat, songPosition songPos) {
+         /*
+        to actually find - we need to know at what bars does level change, know how many beats inside a bar (include sub beats)
+        start from current bar and iter thru, keep track of old + current energy level. first time old != current we get that time and LEAVE.
+        but we actually dont leave because we want to find what time the last note of seq hits at. probably also count how many in this bar (seq) for funsies xd
+        and dont assume powerupLength = 4 or 8 or anything, can be whatever i want it to be (though defining on a "how many bars" makes sense)
+        will need to count backwards to get the beat that changes things then
+        */
+
+        //find index of next bar that changes levels. say bar 0 has level 1 and bar 1 has level 3, we will set changeBar to 1. 
+        int lastLevel = level.perBarEnergyLevel[songPos.bar];
+        int changeBar = -1;
+        for (size_t i = songPos.bar; i < level.perBarEnergyLevel.size(); i++) {
+            int currLevel = level.perBarEnergyLevel[i];
+            if (lastLevel != currLevel) {
+                changeBar = i;
+                break;
+            }
+        }
+        Debugger::resetPermanentLines();
+        //Debugger::print("change at bar %d curr %d", changeBar, songPos.bar);
+
+        //find the last beat player hits before this level change, hitting this after a combo will trigger the change.
+        //check changeBar *= 0 (not that it ever should), and dont do this if no further change found (reached end)
+        int powerupStartBeat = -1;
+        int powerupEndBeat = -1;
+
+        for (size_t i = 0; i < level.beatInteracts.size(); i++) { //some wasteful iteration, might be a TODO to optimise (will see)
+            BeatInteractable* beatToHit = level.beatInteracts[i];
+            int thisBeat = beatToHit->getStartBeat();
+            if (beatToHit->isSlider()) { thisBeat = beatToHit->getEndBeat(); }
+            
+            int thisBar = thisBeat / (songPos.numBeatsInBar * songPos.numSubBeats);
+            if (thisBar < changeBar) {
+                powerupEndBeat = thisBeat;
+            }
+            if (thisBar < changeBar - NUM_POWERUP_BARS) {
+                powerupStartBeat = thisBeat;
+            }
+        }
+
+        return {powerupStartBeat, powerupEndBeat};
     }
-
-    //powerup section is when we are 1 or 2 bars before one in which the energy level goes up
-    //getting a full combo in this section will allow us to meet this
-    //losing the combo will drop us down a level (or go to level 1)
-    bool isPowerupSection(int beat) {
-        //lookahead to see if there is any change from (beat, beat+2)
-        return false;
-    }
-
-    int getDistToNextLevelChange(int startBeat) { //so say we are at beat 0 and level changes at beat 3, we return 3. if at beat 3 we return 0 (changes now).
-        int nextChange = 6; //should be last note in seq we have to hit to activate (NOT first beat in next level). breaks if a beat does not exist here.
-        int diff = nextChange - startBeat;
-        //if (diff < 0) {return 0;}
-        return diff;
-    }
-
-    
-
+ 
     public:
-    energyLevelManager() {
+    EnergyLevelManager(levelData _levelData) {
         p.currState = powerupStates::IDLE;
         p.timeAtStateChange = 0;
         p.numBeatsHit = 0;
         p.numBeatsInSection = 0;
+        level = _levelData;
     }
 
     powerupInfo getCurrPowerupInfo () {
         return p;
     }
 
-    void newBeat(int beat) {
+    void newBeat(songPosition songPos) {
         //this will be bugged - beat can trigger before window to hit beat ends, what do?
         //probably means we need to update state in on hit/miss as well, not just here.... probably use it for as little as possible to min duplication
         //BUT if we dont have anything to hit on first beat of bar.. we should do it here.
         //so ig we need info about beatmap :( tho was probably necessary anyway
         //i think for now we just assume last beat switches it.. feels more satisfying that way probably
         //think we need another state in transistin from before to hit - warn player they want to hit now, but dont penalise them for not hitting immediately.
+        
+        int currBeat = songPos.globalBeat * songPos.numSubBeats + songPos.subBeat;
+        std::tuple<int, int> powerup = getNextLevelChange(currBeat, songPos);
+        int powerupStart = std::get<0>(powerup);
+        int powerupEnd = std::get<1>(powerup);
 
-        int powerupLength = 8; //need 4 beats in a row before level change
-        int powerupBeforeLength = 8; //4 beats before this we tell player to prepare
-        int cooldownLength = 4; //how long do we show message before doing nothing
-        
-        
-        int dist = getDistToNextLevelChange(beat);
-        bool isIdleTime = dist > powerupLength + powerupBeforeLength;
-        bool isBeforeTime = !isIdleTime && dist > powerupLength;
-        bool isJustBeforeTime = dist == powerupBeforeLength;
-        bool isComboTime = dist < powerupBeforeLength && dist > 0;
-        bool isChangeTime = dist == 0;
-        bool isCooldownTime = dist < 0 && dist > -cooldownLength;
+        bool isIdleTime = currBeat < powerupStart - WARNING_LENGTH;
+        bool isBeforeTime = powerupStart - WARNING_LENGTH <= currBeat && currBeat < powerupStart;
+        bool isJustBeforeTime = currBeat == powerupStart;
+        bool isComboTime = powerupStart < currBeat && currBeat < powerupEnd;
 
 
         if (isIdleTime) {
@@ -89,27 +119,27 @@ class energyLevelManager {
         
         if (isBeforeTime && p.currState != powerupStates::BEFORE) {
             p.currState = powerupStates::BEFORE; //warn player
-            p.timeAtStateChange = beat;
-            p.numBeatsInSection = powerupBeforeLength;
+            p.timeAtStateChange = songPos.globalBeat;
+            p.numBeatsInSection = WARNING_LENGTH;
             p.numBeatsHit = 0;
         }
         if (isJustBeforeTime && p.currState != powerupStates::JUST_BEFORE) {
             p.currState = powerupStates::JUST_BEFORE;
             p.numBeatsHit = 0;
-            p.timeAtStateChange = beat;
-            p.numBeatsInSection = powerupLength;
+            p.timeAtStateChange = songPos.globalBeat;
+            p.numBeatsInSection = powerupEnd - powerupStart;
         } 
         if (isComboTime && p.currState == powerupStates::JUST_BEFORE) {
             p.currState = powerupStates::GET_COMBO;
         }
         
         if (p.currState == powerupStates::WIN || p.currState == powerupStates::LOSE) { //there are situations we may not reach this and be stuck forever...
-            if (beat - p.timeAtStateChange > cooldownLength) {
+            if (songPos.globalBeat - p.timeAtStateChange > COOLDOWN_LENGTH) {
                 p.currState = powerupStates::IDLE;
             }
         }
 
-        if (p.currState == powerupStates::GET_COMBO && dist <= 0) { //should not be allowed !!
+        if (p.currState == powerupStates::GET_COMBO && currBeat > powerupEnd) { //should not be allowed !!
             Debugger::error("stuck in state GET_COMBO!");
         }
 
@@ -119,7 +149,9 @@ class energyLevelManager {
 
     //i wonder if we should do an event system for on beat hit/miss? a lot of classes may be intersted in this
     //is that overkill?
-    void beatHit(int beat) {
+    void beatHit(int registerBeat, songPosition songPos) {
+        //we pass in a diff beat to register than songPos.globalBeat as player can still legally hit a little bit after the beat actually changes
+        //in which case songPos.globalBeat is not the value we want. instead registerBeat = the expected beat of an interactable.
         //allows moving up a level if done at right time
         //don't update combo if we didn't get it at very first hit (?) or do we want a second chance
         //probably easiest to demand we get them all right; want combo complete to show on final beat, not before
@@ -133,14 +165,17 @@ class energyLevelManager {
             return;
         }
 
-        int dist = getDistToNextLevelChange(beat);
-        Debugger::print("hit at beat %d with dist %d", beat, dist);
-        if (dist == 0) {//hit for next section
+        std::tuple<int, int> powerup = getNextLevelChange(registerBeat, songPos);
+        int powerupEnd = std::get<1>(powerup);
+
+        //int dist = getDistToNextLevelChange(registerBeat, songPos);
+        //Debugger::print("hit at beat %d with dist %d", beat, dist);
+        p.numBeatsHit += 1;
+        if (registerBeat == powerupEnd) {//hit for next section
             p.currState = powerupStates::WIN;
-            p.timeAtStateChange = beat;
-        } else {
-            p.numBeatsHit += 1;
-        }
+            p.timeAtStateChange = registerBeat;
+            //need to change level to that of the next bar (NOT this current one)
+        } 
     }
 
     void beatEarly(int beat) {
