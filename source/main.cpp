@@ -20,6 +20,7 @@
 #include "energyLevelManager.cpp"
 #include "energyLevelGUI.cpp"
 
+//inputs: click beat on red to play it, press left trigger (Q key on melonDS) to toggle automated/manual playthrough
 
 /*
 how to do different levels of tension?
@@ -83,6 +84,7 @@ int main( int argc, char *argv[] )
 
 	int combo = 0;
 	int energyLevel = 3; //1 lowest, highest is 3
+	bool isAutomatedPlay = false;
 	Debugger::resetErrorMessage();
 
 	while(1)
@@ -92,6 +94,12 @@ int main( int argc, char *argv[] )
 
 		scanKeys();
 		int key = keysHeld();
+		int justDown = keysDown();
+		//detect KEY_L
+
+		if (justDown & KEY_L) { //if left trigger button just pressed
+			isAutomatedPlay = !isAutomatedPlay;
+		}
 
 		frame++;
 
@@ -150,7 +158,7 @@ int main( int argc, char *argv[] )
 		}
 
 		//how efficient is this?
-		std::vector<playableBeatStatus> beatStates = path.getBeatStates(songPos, penX, penY);
+		std::vector<playableBeatStatus> beatStates = path.getBeatStates(songPos, penX, penY, isAutomatedPlay);
 
 		
 		for (size_t i = 0; i < beatStates.size(); i++) {
@@ -223,6 +231,7 @@ int main( int argc, char *argv[] )
 		Debugger::framePrint("bar# %i", songPos.bar);
 		Debugger::framePrint("combo %i", combo);
 		Debugger::framePrint("energy %i", energyLevel);
+		Debugger::framePrint("automated %i", isAutomatedPlay);
 		
 
 		Debugger::render();

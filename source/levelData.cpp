@@ -137,9 +137,19 @@ namespace levelDataParser {
                 {"single 80,100 monotone quart", "3 burstingBeat"}
             }};
 
+            //slider beatStart beatEnd beatLength {pitch|monotone} audioLength
+
+            beatsInBar bar3 = {{
+                {"slider 20,100 50,100 2 monotone quart"},
+                {"none"},
+                {"none"},
+                {"none"},
+                {"single 80,100 monotone quart"}
+            }};
+
             std::vector<barConfig> song = {
             //if win combo we incr energy level, if lose we do nothing (or could decr). when energy level drops (eg 3 -> 1) we reset it to new val.
-                {bar2, 1}, 
+                {bar3, 1}, 
                 {bar2},
                 {bar2, 2}, 
                 {bar2},

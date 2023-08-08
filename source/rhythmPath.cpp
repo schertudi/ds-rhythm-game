@@ -34,7 +34,7 @@ class RhythmPath {
 		killInactiveBeats(pos.globalBeat, 5);
     }
 
-    std::vector<playableBeatStatus> getBeatStates(songPosition pos, int touchX, int touchY) {
+    std::vector<playableBeatStatus> getBeatStates(songPosition pos, int touchX, int touchY, bool isAutomatedPlay) {
         std::vector<playableBeatStatus> states;
         int beat = pos.globalBeat * pos.numSubBeats + pos.subBeat;
         int progressToNext = pos.subBeatProgress;
@@ -44,6 +44,9 @@ class RhythmPath {
             int p = b->getBeatProgress(beat, progressToNext, margin);
             
             bool isHit = b->isHit(touchX, touchY, beat, progressToNext, margin);
+            if (isAutomatedPlay) {
+                isHit = p >= 100 && p <= 200;
+            }
 
             playableBeatStatus beatState;
             beatState.beatStart = b->getStartBeat();
