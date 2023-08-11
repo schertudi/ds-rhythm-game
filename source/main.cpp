@@ -3,49 +3,27 @@
 #include <stdio.h>
 #include <nds/arm9/input.h>
 #include "vscode_fix.h"
-#include "effects.cpp"
-#include "trail.cpp"
-#include "beatManager.cpp"
-#include "audioManager.cpp"
+#include <gl2d.h>
+//#include "archive/effects.cpp"
+//#include "archive/trail.cpp"
+#include "songTimeTracker.h"
+#include "audioPlayer.h"
 #include "constants.h"
 #include "vectorShapes.h"
 #include "mathHelpers.h"
-#include "animationCommand.cpp"
+#include "animationCommandManager.h"
 #include <string.h>
 #include <array>
-#include "rhythmPath.cpp"
-#include "beatToHit.cpp"
+#include "hitBeatUpdater.h"
+#include "hitBeat.h"
 #include "debugTools.h"
-#include "levelData.h"
-#include "energyLevelManager.cpp"
-#include "energyLevelGUI.cpp"
+#include "levelParser.h"
+#include "energyLevelTracker.h"
+#include "energyLevelDisplay.h"
 
 //inputs: click beat on red to play it, press left trigger (Q key on melonDS) to toggle automated/manual playthrough
 
-/*
-how to do different levels of tension?
-tracker might have say 3 channels, 1 channel for each level
-song is split into sections which indicates the max level it can have at that point
-also have a number of beats need to get a combo in (eg get every beat in the last 2 bars right) 
-when this combo is completed, you are allowed to move to the next level. if this combo is not achieved, you don't move
-might want some kind of condition for prematurely going down a level, idk
-might also want a second chance to reach this level - like 2 level 2's in a row - and if this is missed you go down again, if reached just stay at level 2
 
-at a higher level, more channels play music and more animations will play. could even have a different hit sound, idk.
-
-need a gui on top screen showing that you are about to move up a level - could show your current combo (counting from start)
-and maybe in a bright colour. or just something flashing and saying "keep your combo". 
-or a loading-bar thing that increases on each hit - indicating building pressure - "explodes" when you hit the next section correctly
-and fizzles out if you lose combo
-
-how is this enforced in code....?
-
-
-
-
-
-*/
-enum tokens {single, nopitch, quart, diagonalBouncingBall, sineWave, top, bottom, slider, half, one, two, three, four};
 
 int main( int argc, char *argv[] )
 {
@@ -63,24 +41,24 @@ int main( int argc, char *argv[] )
 	consoleDemoInit();
 
 	int frame = 0;
-	AudioManager audioManager = AudioManager();
-	CircleEffect pointerEffect(800, 20);
+	AudioPlayer audioPlayer = AudioPlayer();
+	//CircleEffect pointerEffect(800, 20);
 	touchPosition touch;
-	TouchTracker touchTracker(0);
+	//TouchTracker touchTracker(0);
 	int numSubBeats = 2;
 	int numBeatsInBar = 4;
-	BeatManager beatManager(120, numSubBeats); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
+	SongTimeTracker timeTracker(120, numSubBeats); //it doesnt like high bpm with fine granularity (eg 120,4); suspect (sub)progress not always hitting 0
 	//it also goes insane with a bpm like (70, 2).
 
-	levelData levelData = levelDataParser::setup(numSubBeats * numBeatsInBar);
-	RhythmPath path = RhythmPath(2, 60, levelData.beatInteracts);
+	levelData levelData = LevelDataParser::setup(numSubBeats * numBeatsInBar);
+	HitBeatUpdater path = HitBeatUpdater(2, 60, levelData.beatInteracts);
 
 	AnimationCommandManager animationCommandManager = AnimationCommandManager(levelData.animations);
 
 	std::vector<int> perBarEnergyLevel = levelData.perBarEnergyLevel;
 
-	EnergyLevelManager energyLevelManager = EnergyLevelManager(levelData);
-	EnergyLevelGUI energyLevelGUI;
+	EnergyLevelTracker energyLevelTracker = EnergyLevelTracker(levelData);
+	EnergyLevelDisplay energyLevelDisplay;
 
 	int combo = 0;
 	int energyLevel = 3; //1 lowest, highest is 3
@@ -95,7 +73,6 @@ int main( int argc, char *argv[] )
 		scanKeys();
 		int key = keysHeld();
 		int justDown = keysDown();
-		//detect KEY_L
 
 		if (justDown & KEY_L) { //if left trigger button just pressed
 			isAutomatedPlay = !isAutomatedPlay;
@@ -103,15 +80,9 @@ int main( int argc, char *argv[] )
 
 		frame++;
 
-		int beatStatus = beatManager.updateBeat(frame);
-		songPosition songPos = beatManager.getSongPosition();
+		int beatStatus = timeTracker.updateBeat(frame);
+		songPosition songPos = timeTracker.getSongPosition();
 		int beat = songPos.globalBeat;
-		//int progress = songPos.globalBeatProgress;
-
-		if (songPos.bar >= 0 && (size_t)songPos.bar < perBarEnergyLevel.size()) {
-			//will update slightly too late (early animations won't show), unsure if should fix or not
-			//energyLevel = perBarEnergyLevel[songPos.bar];
-		}
 		
 
 		if (beatStatus == 1) {
@@ -123,21 +94,17 @@ int main( int argc, char *argv[] )
 
 		if (beatStatus > 0) {
 			if (beatStatus == 2 && beat == 2) { //just changed main beat to 2
-				audioManager.startMusic();
+				audioPlayer.startMusic();
 			}
 
 			if ( (songPos.localBeat) % 4 == 0) {
 				//audioManager.metronome(1);
 			}
-
-			
 			
 			path.onBeat(songPos);
-			energyLevelManager.newBeat(songPos);
-			
+			energyLevelTracker.newBeat(songPos);
 		}
 
-		//int hitState;
 		int penX = -100;
 		int penY = -100;
 		bool isPenDown = key & KEY_TOUCH;
@@ -147,20 +114,13 @@ int main( int argc, char *argv[] )
 
 			penX = touch.px;
 			penY = touch.py;
-
-			//hitState = path.updateBeats(songPos, touch.px, touch.py);
 			
-			pointerEffect.basicCircle(touch.px, touch.py, songPos.globalBeatProgress);
-			touchTracker.logTouch(touch.px, touch.py);
-		} else {
-			//hitState = path.updateBeats(songPos, -100, -100);
-			//pointerEffect.basicCircle(touch.px, touch.py, beatManager.getProgress());
+			//pointerEffect.basicCircle(touch.px, touch.py, songPos.globalBeatProgress);
+			//touchTracker.logTouch(touch.px, touch.py);
 		}
 
-		//how efficient is this?
 		std::vector<playableBeatStatus> beatStates = path.getBeatStates(songPos, penX, penY, isAutomatedPlay);
 
-		
 		for (size_t i = 0; i < beatStates.size(); i++) {
 			playerStatus status = beatStates[i].playerState;
 			int beatStart = beatStates[i].beatStart;
@@ -171,13 +131,13 @@ int main( int argc, char *argv[] )
 			if (status == playerStatus::EARLY_HIT) {
 				combo = 0;
 				path.deactivateBeat(beatStart, songPos.globalBeat);
-				energyLevelManager.beatEarly(beatStart);
+				energyLevelTracker.beatEarly(beatStart);
 			}
 			if (isSlider) {
 				if (status == playerStatus::SLIDER_HIT) { //starting beat, play sound (once)
 					combo += 1;
-					path.playSound(beatStart, audioManager);
-					energyLevelManager.beatHit(beatStart, songPos); //note we MIGHT have bugs if using songPos.globalBeat and not beatS
+					path.playSound(beatStart, audioPlayer);
+					energyLevelTracker.beatHit(beatStart, songPos); //note we MIGHT have bugs if using songPos.globalBeat and not beatS
 				}
 				if (status == playerStatus::SLIDER_EARLY_LIFT) {
 					combo = 0;
@@ -185,16 +145,16 @@ int main( int argc, char *argv[] )
 				}
 				if (status == playerStatus::SLIDER_END) { //play end beat
 					combo += 1;
-					path.playSound(beatStart, audioManager);
+					path.playSound(beatStart, audioPlayer);
 					path.deactivateBeat(beatStart, songPos.globalBeat);
-					energyLevelManager.beatHit(beatStates[i].beatEnd, songPos);
+					energyLevelTracker.beatHit(beatStates[i].beatEnd, songPos);
 				}
 			} else {
 				//check if hit singular beat on time
 				if (status == playerStatus::CORRECT_HIT) {
 					combo += 1;
-					path.playSound(beatStart, audioManager);
-					energyLevelManager.beatHit(beatStart, songPos);
+					path.playSound(beatStart, audioPlayer);
+					energyLevelTracker.beatHit(beatStart, songPos);
 				}
 				if (status == playerStatus::CORRECT_LIFT) {
 					path.deactivateBeat(beatStart, songPos.globalBeat);
@@ -205,23 +165,18 @@ int main( int argc, char *argv[] )
 			if (status == playerStatus::MISS) {
 				combo = 0;
 				path.deactivateBeat(beatStart, songPos.globalBeat);
-				energyLevelManager.beatMiss(songPos.globalBeat);
+				energyLevelTracker.beatMiss(songPos.globalBeat);
 			}
 			
 		}
 
-		
-
 		path.renderBeats(songPos);
 
-
-		//touchTracker.deleteOldEntries();
-		energyLevel = energyLevelManager.getEnergyLevel();
+		energyLevel = energyLevelTracker.getEnergyLevel();
 
 		animationCommandManager.updateAnimations(songPos, beatStates, {penX, penY}, energyLevel);
-		powerupInfo p = energyLevelManager.getCurrPowerupInfo();
-		energyLevelGUI.draw(p, songPos);
-
+		powerupInfo p = energyLevelTracker.getCurrPowerupInfo();
+		energyLevelDisplay.draw(p, songPos);
 
 		consoleClear();
 		int fineBeat = songPos.globalBeat * songPos.numSubBeats + songPos.subBeat;
@@ -232,19 +187,14 @@ int main( int argc, char *argv[] )
 		Debugger::framePrint("combo %i", combo);
 		Debugger::framePrint("energy %i", energyLevel);
 		Debugger::framePrint("automated %i", isAutomatedPlay);
-		
 
 		Debugger::render();
-
 
 		glFlush(0);
 
 		swiWaitForVBlank();
 
-		
 	}
-
-	
 
 	return 0;
 	

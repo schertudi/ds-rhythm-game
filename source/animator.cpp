@@ -1,6 +1,3 @@
-#ifndef ANIMATOR_H
-#define ANIMATOR_H
-
 #include <nds.h>
 #include <nds/arm9/console.h>
 #include <stdio.h>
@@ -8,61 +5,10 @@
 #include <tuple>
 #include "vscode_fix.h"
 #include "vectorShapes.h"
-
 #include "constants.h"
 #include "mathHelpers.h"
 
-/*
-at the moment we have a bunch of self-contained functions that, given beat and progress, can animate one small thing.
-these animations can occur before being hit, on hit, anywhere on slide (in case of sliders) and after hit.
-we probably also want the option for fail animations on note miss.
-the way it is set up now, it's possible to make animation that persists across beats just by keeping inputs consistent
-eg can slide a circle from a to b, and then on next beat have animation of it bouncing from b to c.
-but do we want to simplify this to make modifications easier? perhaps having pre-defined patterns you can just plug inputs into.
-because the definition for beats is already going to be a little complex (defining animations at each part), might as well 
-    complicate it a little more but make it easier to reuse things.
-
-maybe we have classes for certain patterns, and those patterns can be customized using preset parameters. the ones we dont care about are kept internal.
-then we can have a certain pattern start at a certain beat.
-eg at beat 2, we play the throwBall pattern with slider length of 4 beats. slider goes from (x1, y1) to (x2, y2) and ball falls at (x3, y3).
-probably keep functions and classes separate so things can be reused nicely. the class is just for combining patterns.
-generic functionality - i guess we have identical logic for when different animations should be executed. 
-so all classes have a function for drawing on fail, and other parts of the game draw that based on beats and player input.
-
-i think this is a command pattern!
-sender/invoker - probably something like rhythmPath (idk)
-make a command interface, animationCommandInterface (-> interactiveAnimationCommandInterface, backgroundAnimationCommandInterface)
-concrete command - the specific patterns we want. call concreteAnimationCommand
-reciever - right now Animator - performs the animation functions
-client - this will be used to setup commands
-
-might want distinction between interactive/non-interactive commands, as we want some to trigger on user and some should just run in background
-
-
-for command in list:
-command.update(beat, progress)
-
-command.update():
-    #pick what function to run based on timings + user input
-
-command.status(beat, progress):
-    if startBeat > beat + 2 or beat + 2 > endBeat:
-        return "inactive"
-    if startBeat > beat:
-        return "before"
-    if beat > endBeat:
-        return "after"
-    return "on beat"
-
-*/
-
-
-class Animator {
-
-    public: 
-    Animator() {
-
-    }
+namespace Animator {
 
     void bouncingBallStraight(int progress, int beat, int numBeats) { //at 0 we are furthest, 50 we hit wall, 100 we are furthest again
         beat = beat % numBeats;
@@ -96,14 +42,11 @@ class Animator {
     }
 
     void bouncingBallDiagonal(int startTime, int endTime, int currTime, Vec2d startPos, Vec2d endPos, int height) { //beat 0 start and then we offset from there
-        //Vec2d start = {20, 100};
-        //Vec2d hit = {50, 80};
-        //Vec2d end = {80, 100};
         Vec2d middlePos = { (startPos.x + endPos.x) / 2, (startPos.y + endPos.y) / 2 - height };
         int t = inverseLerp(startTime, endTime, currTime);
         if (t > 100) t = 100;
         if (t < 0) t = 0;
-        //int xOffset = beat * (end.x - start.x);
+
         int xOffset = 0; //used for later beats, but keeping it individual for now
         startPos.x += xOffset;
         middlePos.x += xOffset;
@@ -154,23 +97,6 @@ class Animator {
             distToTop = lerp(maxDist, SCREEN_HEIGHT, progress);
             vectorRect(0, distToTop, SCREEN_WIDTH, SCREEN_HEIGHT, {c.r, c.g, c.b}, ANIMATION_BG_LAYER);
         }
-        
-
-        /*
-        beat = beat % numBeats;
-        if (beat < numBeats - 2) {
-            int y = (SCREEN_HEIGHT / numBeats * (numBeats - beat));
-            vectorRect(0, y, SCREEN_WIDTH, SCREEN_HEIGHT, {0, 31, 25}, ANIMATION_BG_LAYER);
-        } else if (beat < numBeats - 1) {
-            int y = (SCREEN_HEIGHT / numBeats * (numBeats - beat));
-            vectorRect(0, y, SCREEN_WIDTH, SCREEN_HEIGHT, {0, 31, 15}, ANIMATION_BG_LAYER);
-        } else {
-            //animate it being drained; at progress = 0 we are at min y and at progress = 0 we are at SCREEN_HEIGHT
-            //if (progress < 50) progress = 0;
-            int y = lerp((SCREEN_HEIGHT / numBeats * (numBeats - beat + 1)), SCREEN_HEIGHT, progress);
-            vectorRect(0, y, SCREEN_WIDTH, SCREEN_HEIGHT, {0, 31, 15}, ANIMATION_BG_LAYER);
-        }
-        */
     }
 
     void sineWave(int beat, int progress, direction wallSide, Colour colour) { //wall=1: top; wall=2: bottom
@@ -189,7 +115,6 @@ class Animator {
             yOffset = SCREEN_HEIGHT - yOffset;
             curveDepth = -curveDepth;
         }
-        //if (invert) 
 
         for( i = 0; i < SCREEN_WIDTH; i += 1)
         {
@@ -348,8 +273,6 @@ class Animator {
         if (t > 100) t = 100;
 
         Vec2d point = threePointBezier(startPos, {midX, midY}, endPos, t);
-        //vectorCircle(start.x, start.y, 5, {10, 31, 31});
-        //vectorCircle(end.x, end.y, 5, {31, 31, 10});
         vectorCircle(point.x, point.y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
 
     }
@@ -371,10 +294,6 @@ class Animator {
         Colour c = lerpColour(startC, endC, lerp);
 
         vectorRect(rectTop.x, rectTop.y, rectBottom.x, rectBottom.y, c, ANIMATION_BG_LAYER);
-
-        //vectorRect(x - 2, startY, x + 2, endY, {5, 5, 5}, ANIMATION_FG_LAYER);
-
-        //vectorRect(sliderPos.x - 10, sliderPos.y - 5, sliderPos.x + 10, sliderPos.y + 5, {5, 5, 5}, ANIMATION_FG_LAYER);
     }
 
     void shakingObject(int beat, int progress, int startBeat, int endBeat, Vec2d pos) {
@@ -448,7 +367,3 @@ class Animator {
 
     }
 };
-
-
-
-#endif

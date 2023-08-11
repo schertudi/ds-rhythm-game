@@ -17,6 +17,7 @@ struct Vec2d {
     int y;
 };
 
+//possible TODO is to typedef some of these i'm getting a little sick of the confusion, also look at streamlining it a bit
 struct songPosition {
     int globalBeat;
     int localBeat;

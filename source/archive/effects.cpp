@@ -5,9 +5,9 @@
 #include <nds/arm9/console.h>
 #include <stdio.h>
 #include <gl2d.h>
-#include "vscode_fix.h"
+#include "../vscode_fix.h"
 
-#include "constants.h"
+#include "../constants.h"
 
 
 class CircleEffect {
@@ -23,14 +23,6 @@ class CircleEffect {
 	}
 
 	void basicCircle(int xOrigin, int yOrigin, int beatProgress) { // beatProgress is 0-100
-	/*
-		basicCircle2(0, 10, cosLerp((0 * 32767) / 100) / 500);
-		basicCircle2(SCREEN_WIDTH / 4, 10, cosLerp((25 * 32767) / 100) / 500);
-		basicCircle2(SCREEN_WIDTH / 2, 10, cosLerp((beatProgress * 32767) / 100) / 500);
-		basicCircle2(SCREEN_WIDTH / 4 * 3, 10, cosLerp((75 * 32767) / 100) / 500);
-		basicCircle2(SCREEN_WIDTH, 10, cosLerp((100 * 32767) / 100) / 500);
-		*/
-	
 		glBegin2D();
 
 		//draw a filled circle using triangles

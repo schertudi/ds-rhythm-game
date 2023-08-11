@@ -27,10 +27,10 @@ int dist(Vec2d a, Vec2d b);
 
 Colour lerpColour(Colour c1, Colour c2, int t);
 
-std::tuple<Vec2d, int> projectPointToLine(Vec2d start, Vec2d end, Vec2d penPos); 
 //project any given point onto line using distance from start pos
 //returns the point on the line closest to penPos, and the distance from penPos to that point
 //these involve very similar calculations so it's slightly more efficient to do them together at cost of being a slightly clunkier function
+std::tuple<Vec2d, int> projectPointToLine(Vec2d start, Vec2d end, Vec2d penPos); 
 
 std::tuple<int, int, int>  findQuadraticEquationFromGradients(int x1, int y1, int m1, int x2, int m2); //USELESS 
 

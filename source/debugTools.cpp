@@ -54,7 +54,6 @@ namespace Debugger {
         std::string formattedString = std::string(buf);
 
         errorMessage = "ERR: " + formattedString;
-        //errorMessage = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAABB";
     }
 
     void render() {
