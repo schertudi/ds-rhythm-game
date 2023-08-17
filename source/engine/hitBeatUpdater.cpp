@@ -4,7 +4,6 @@
 #include "hitBeat.h"
 #include <iostream>
 #include "noteDefinitions.h"
-#include "debugTools.h"
 #include "hitBeatUpdater.h"
 
 playerStatus getPlayerStatusForSingleBeat(playableBeatStatus status) {

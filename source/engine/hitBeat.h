@@ -2,7 +2,7 @@
 
 
 #include "constants.h"
-#include "audioPlayer.h"
+#include "../sysWrappers/audioPlayer.h"
 
 
 class HitBeatAbstract {

@@ -1,7 +1,7 @@
 #ifndef VECTORSHAPES_H
 #define VECTORSHAPES_H
 
-#include "constants.h"
+#include "../engine/constants.h"
 
 void vectorCircle(int xOrigin, int yOrigin, int radius, Colour c, int depth);
 void vectorRect(int x1, int y1, int x2, int y2, Colour c, int depth);

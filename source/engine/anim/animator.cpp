@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <gl2d.h>
 #include <tuple>
-#include "vscode_fix.h"
-#include "vectorShapes.h"
-#include "constants.h"
-#include "mathHelpers.h"
+#include "../../vscode_fix.h"
+#include "../../sysWrappers/vectorShapes.h"
+#include "../constants.h"
+#include "../mathHelpers.h"
 
 namespace Animator {
 

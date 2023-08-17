@@ -1,8 +1,8 @@
 #ifndef MATH_HELPERS_H
 #define MATH_HELPERS_H
 
-#include "vectorShapes.h"
 #include <tuple>
+#include "constants.h"
 
 
 int intAtan2(int y, int x);

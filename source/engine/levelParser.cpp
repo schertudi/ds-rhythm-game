@@ -7,7 +7,7 @@
 #include <iostream>
 #include "noteDefinitions.h"
 #include "constants.h"
-#include "debugTools.h"
+#include "../sysWrappers/debugTools.h"
 
 namespace LevelDataParser {
     namespace { //anonymous namespace encapsulates functions so other files don't see them

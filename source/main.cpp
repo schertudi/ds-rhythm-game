@@ -6,20 +6,19 @@
 #include <gl2d.h>
 //#include "archive/effects.cpp"
 //#include "archive/trail.cpp"
-#include "songTimeTracker.h"
-#include "audioPlayer.h"
-#include "constants.h"
-#include "vectorShapes.h"
-#include "mathHelpers.h"
-#include "animationCommandManager.h"
+#include "engine/songTimeTracker.h"
+#include "sysWrappers/audioPlayer.h"
+#include "engine/constants.h"
+#include "engine/mathHelpers.h"
+#include "engine/anim/animationCommandManager.h"
 #include <string.h>
 #include <array>
-#include "hitBeatUpdater.h"
-#include "hitBeat.h"
-#include "debugTools.h"
-#include "levelParser.h"
-#include "energyLevelTracker.h"
-#include "energyLevelDisplay.h"
+#include "engine/hitBeatUpdater.h"
+#include "engine/hitBeat.h"
+#include "sysWrappers/debugTools.h"
+#include "engine/levelParser.h"
+#include "engine/energyLevelTracker.h"
+#include "engine/energyLevelDisplay.h"
 
 //inputs: click beat on red to play it, press left trigger (Q key on melonDS) to toggle automated/manual playthrough
 

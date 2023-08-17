@@ -1,11 +1,9 @@
-#pragma once
 
 #include <vector>
 #include <tuple>
 #include "animator.h"
-#include "mathHelpers.h"
-#include "vectorShapes.h"
-#include "debugTools.h"
+#include "../mathHelpers.h"
+#include "../../sysWrappers/vectorShapes.h"
 
 #include "multiBeatStateTracker.h"
 

@@ -1,7 +1,7 @@
 #pragma once
 #include <utility>
 #include "hitBeat.h"
-#include "animationCommands.h"
+#include "anim/animationCommands.h"
 
 struct levelData {
 	std::vector<HitBeatAbstract*> beatInteracts;

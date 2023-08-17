@@ -12,7 +12,7 @@ song pos
 */
 
 #include "energyLevelDisplay.h"
-#include "debugTools.h"
+#include "../sysWrappers/debugTools.h"
 
 
 

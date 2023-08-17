@@ -2,9 +2,9 @@
 #include <nds.h>
 #include <math.h>
 
-#include "vectorShapes.h"
 #include <tuple>
-#include "vscode_fix.h"
+#include "../vscode_fix.h"
+#include "mathHelpers.h"
 
 
 int intAtan2(int y, int x) {
