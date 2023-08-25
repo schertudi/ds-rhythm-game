@@ -1,5 +1,5 @@
 
-
+#include <nds/arm9/console.h>
 #include "engineController.h"
 #include "../sysWrappers/debugTools.h"
 #include "../sysWrappers/input.h"
@@ -26,7 +26,7 @@ void EngineController::update() {
     int beatStatus = timeTracker.updateBeat(frame);
     songPosition songPos = timeTracker.getSongPosition();
 
-    playMetronome(beatStatus);
+    //playMetronome(beatStatus);
 
     if (beatStatus > 0) {
         if (beatStatus == 2 && songPos.globalBeat == 0) { //just changed main beat to 0
@@ -53,6 +53,8 @@ void EngineController::update() {
     energyLevelDisplay.draw(p, songPos);
 
     int fineBeat = songPos.globalBeat * songPos.numSubBeats + songPos.subBeat;
+
+    consoleClear();
     Debugger::framePrint("time .%i.", fineBeat * 100 + songPos.subBeatProgress);
     Debugger::framePrint("beat .%i.", songPos.globalBeat);
     Debugger::framePrint("bar# %i", songPos.bar);
