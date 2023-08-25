@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "constants.h"
+#include "engineTypes.h"
 #include "hitBeat.h"
 
 //manages hit beats throughout their lifespan by deciding when to activate/deactivate. gives external objects a simple overview of current hit beat states.
@@ -17,7 +17,7 @@ class HitBeatUpdater {
     std::vector<HitBeatAbstract*> spawnedBeats;
 
     public:
-    HitBeatUpdater(int _lookahead, int _margin, std::vector<HitBeatAbstract*> _beatInteractObjs);
+    void init(int _lookahead, int _margin, std::vector<HitBeatAbstract*> _beatInteractObjs);
    
     void onBeat(songPosition pos);
 

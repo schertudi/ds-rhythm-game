@@ -5,8 +5,8 @@
 #include <vector>
 #include <map>
 #include <iostream>
-#include "noteDefinitions.h"
-#include "constants.h"
+#include "../noteDefinitions.h"
+#include "engineTypes.h"
 #include "../sysWrappers/debugTools.h"
 
 namespace LevelDataParser {
@@ -186,7 +186,7 @@ namespace LevelDataParser {
                 }
                 int x = strToInt(split[1]);
                 int y = strToInt(split[2]);
-                int pitch = getPitch(split[3]); //would need to convert this if not nopitch, todo
+                int pitch = getPitch(split[3]);
                 int soundLength = getSoundLength(split[4]); //need to convert to enum or const 
                 SingleHitBeat* newBeat = new SingleHitBeat(startBeat, x, y, soundLength, pitch);
                 return newBeat;

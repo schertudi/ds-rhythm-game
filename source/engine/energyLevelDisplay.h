@@ -1,4 +1,6 @@
-#include "constants.h"
+#pragma once
+
+#include "engineTypes.h"
 
 
 class EnergyLevelDisplay {

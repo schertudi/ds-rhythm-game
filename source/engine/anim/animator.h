@@ -1,6 +1,7 @@
 #pragma once
 
-#include "../constants.h"
+#include "../../genericTypes.h"
+#include "../engineTypes.h"
 
 namespace Animator {
 

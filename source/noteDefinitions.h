@@ -1,5 +1,4 @@
-#ifndef NOTEDEFS_H
-#define NOTEDEFS_H
+#pragma once
 
 #define NOTE_C 100 //2^0 
 #define NOTE_CS 106 //2^(1/12)
@@ -33,5 +32,3 @@
 #define FOUR_BEAT 4
 #define HALF_BEAT 12
 #define QUART_BEAT 14
-
-#endif // NOTEDEFS_H

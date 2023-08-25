@@ -3,7 +3,7 @@
 #include <math.h>
 
 #include <tuple>
-#include "../vscode_fix.h"
+#include "vscode_fix.h"
 #include "mathHelpers.h"
 
 

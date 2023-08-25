@@ -2,9 +2,9 @@
 #include <vector>
 #include <tuple>
 #include "animator.h"
-#include "../mathHelpers.h"
+#include "../../mathHelpers.h"
 #include "../../sysWrappers/vectorShapes.h"
-
+#include "../../layerDefinitions.h"
 #include "multiBeatStateTracker.h"
 
 #include "animationCommands.h"

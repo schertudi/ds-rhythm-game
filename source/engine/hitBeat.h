@@ -1,7 +1,8 @@
 #pragma once
 
 
-#include "constants.h"
+#include "engineTypes.h"
+#include "../genericTypes.h"
 #include "../sysWrappers/audioPlayer.h"
 
 

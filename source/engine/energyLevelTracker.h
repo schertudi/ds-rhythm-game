@@ -1,13 +1,13 @@
 #pragma once
 
 #include <tuple>
-#include "constants.h"
+#include "engineTypes.h"
 #include "levelParser.h"
 
 class EnergyLevelTracker {
-    const int NUM_POWERUP_BARS = 1;
-    const int WARNING_LENGTH = 8; //measured in subbeats
-    const int COOLDOWN_LENGTH = 4; //measured in beats
+    int NUM_POWERUP_BARS = 1;
+    int WARNING_LENGTH = 8; //measured in subbeats
+    int COOLDOWN_LENGTH = 4; //measured in beats
 
     int powerupCombo = -1;
     bool missedSection = false;
@@ -20,7 +20,7 @@ class EnergyLevelTracker {
     std::tuple<int, int> getNextLevelChange(int currBeat, songPosition songPos);
  
     public:
-    EnergyLevelTracker(levelData _levelData);
+    void init(levelData _levelData);
 
     powerupInfo getCurrPowerupInfo () {
         return p;

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include "animationCommands.h"
 
@@ -7,7 +9,7 @@ class AnimationCommandManager {
     int beatLookAhead = 2;
 
     public:
-    AnimationCommandManager(std::vector<AnimationCommand*> _animationCommands);
+    void init(std::vector<AnimationCommand*> _animationCommands);
 
     void updateAnimations(songPosition pos, std::vector<playableBeatStatus> beatStates, Vec2d penPos, int energyLevel);
 

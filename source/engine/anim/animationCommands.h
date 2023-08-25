@@ -1,7 +1,8 @@
 #pragma once
 
 #include <vector>
-#include "../constants.h"
+#include "../engineTypes.h"
+#include "../../genericTypes.h"
 #include "multiBeatStateTracker.h"
 
 class AnimationCommand {

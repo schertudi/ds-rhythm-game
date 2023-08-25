@@ -1,5 +1,3 @@
-#pragma once
-
 #include "debugTools.h"
 #include <stdio.h>
 #include <stdarg.h>

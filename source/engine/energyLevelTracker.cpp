@@ -48,7 +48,7 @@ std::tuple<int, int> EnergyLevelTracker::getNextLevelChange(int currBeat, songPo
     return {powerupStartBeat, powerupEndBeat};
 }
 
-EnergyLevelTracker::EnergyLevelTracker(levelData _levelData) {
+void EnergyLevelTracker::init(levelData _levelData) {
     p.currState = powerupStates::IDLE;
     p.timeAtStateChange = 0;
     p.numBeatsHit = 0;

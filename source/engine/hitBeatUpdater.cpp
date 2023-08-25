@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "hitBeat.h"
 #include <iostream>
-#include "noteDefinitions.h"
+#include "../noteDefinitions.h"
 #include "hitBeatUpdater.h"
 
 playerStatus getPlayerStatusForSingleBeat(playableBeatStatus status) {
@@ -68,7 +68,7 @@ playerStatus getPlayerStatusForSliderBeat(playableBeatStatus status) {
 
 
 
-HitBeatUpdater::HitBeatUpdater(int _lookahead, int _margin, std::vector<HitBeatAbstract*> _beatInteractObjs) {
+void HitBeatUpdater::init(int _lookahead, int _margin, std::vector<HitBeatAbstract*> _beatInteractObjs) {
     beatLookAhead = _lookahead;
     margin = _margin;
     beatInteractObjs = _beatInteractObjs;

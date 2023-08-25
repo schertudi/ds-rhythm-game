@@ -1,7 +1,7 @@
 #include "songTimeTracker.h"
 
 
-SongTimeTracker::SongTimeTracker(int b, int sub) {
+void SongTimeTracker::init(int b, int sub) {
     globalBeat = -3;
     bpm = b;
     subBpm = b * sub;

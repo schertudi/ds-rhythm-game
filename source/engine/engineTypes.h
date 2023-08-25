@@ -1,33 +1,23 @@
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+#pragma once
 
+#include <vector>
+#include "../genericTypes.h"
 
-#define HALF_WIDTH (SCREEN_WIDTH/2)
-#define HALF_HEIGHT (SCREEN_HEIGHT/2)
-#define BRAD_PI (1 << 14)
-
-struct Colour {
-    int r;
-    int g;
-    int b;
-};
-
-struct Vec2d {
-    int x;
-    int y;
-};
+typedef int beatTime_t;
+typedef int globalBeatProgress_t;
+typedef int subBeatProgress_t;
 
 //possible TODO is to typedef some of these i'm getting a little sick of the confusion, also look at streamlining it a bit
 struct songPosition {
-    int globalBeat;
-    int localBeat;
-    int subBeat;
+    int globalBeat; //20 refs
+    int localBeat; //barely used
+    int subBeat; //7 refs, only used for more granular global beat really
     int bar;
-    int globalBeatProgress; //used for animations
-    int subBeatProgress; //used for calculating timings
-    int numSubBeats;
-    int numBeatsInBar;
-    int time;
+    int globalBeatProgress; //used for animations......???? why is this not used lol
+    int subBeatProgress; //used for calculating timings.... 5 refs
+    int numSubBeats; //10 refs, can't really simplify meaningfully
+    int numBeatsInBar; //3 refs, just used to calculating bar, not worth simplification
+    int time; //unimplemented but should be
 };
 
 enum playerStatus { IDLE, EARLY_HIT, EARLY_LIFT, READY_TO_HIT, CORRECT_HIT, CORRECT_LIFT, SLIDER_HIT, SLIDER_EARLY_LIFT, SLIDER_END, MISS }; 
@@ -56,12 +46,3 @@ struct powerupInfo {
     int numBeatsInSection;
 };
 
-#define NUM_SUBLAYERS 10
-#define ANIMATION_BG_LAYER 1 * NUM_SUBLAYERS
-#define ANIMATION_MG_LAYER 2 * NUM_SUBLAYERS
-#define ANIMATION_FG_LAYER 3 * NUM_SUBLAYERS
-#define BEATPATH_LAYER 4 * NUM_SUBLAYERS
-
-
-
-#endif

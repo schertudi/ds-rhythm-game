@@ -1,6 +1,6 @@
 #pragma once
 
-#include "constants.h"
+#include "engineTypes.h"
 
 
 class SongTimeTracker {
@@ -15,7 +15,7 @@ class SongTimeTracker {
     int numBeatsInBar;
 
     public:
-    SongTimeTracker(int b, int sub);
+    void init(int b, int sub);
 
     int updateBeat(int frame);
 

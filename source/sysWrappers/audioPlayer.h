@@ -1,5 +1,5 @@
 #pragma once
-#include "../engine/noteDefinitions.h"
+#include "../noteDefinitions.h"
 
 
 class AudioPlayer {

@@ -1,6 +1,6 @@
 #include "animationCommandManager.h"
 
-AnimationCommandManager::AnimationCommandManager(std::vector<AnimationCommand*> _animationCommands) {
+void AnimationCommandManager::init(std::vector<AnimationCommand*> _animationCommands) {
     animationCommands = _animationCommands;
 }
 

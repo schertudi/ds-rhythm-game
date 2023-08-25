@@ -5,8 +5,11 @@
 #include <tuple>
 #include "../../vscode_fix.h"
 #include "../../sysWrappers/vectorShapes.h"
-#include "../constants.h"
-#include "../mathHelpers.h"
+#include "../../mathHelpers.h"
+#include "../../layerDefinitions.h"
+#include "../engineTypes.h"
+
+#define BRAD_PI (1 << 14)
 
 namespace Animator {
 

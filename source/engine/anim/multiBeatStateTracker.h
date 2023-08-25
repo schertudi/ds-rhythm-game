@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include "../constants.h"
 #include <stddef.h>
+#include "../engineTypes.h"
 
 class MultiBeatStateTracker {
     public:

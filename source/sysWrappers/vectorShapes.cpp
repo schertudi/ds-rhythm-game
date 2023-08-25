@@ -7,7 +7,9 @@
 #include <gl2d.h>
 #include "../vscode_fix.h"
 #include "vectorShapes.h"
-#include "../engine/mathHelpers.h"
+#include "../mathHelpers.h"
+
+#define BRAD_PI (1 << 14)
 
 void vectorCircle(int xOrigin, int yOrigin, int radius, Colour c, int depth) { // beatProgress is 0-100
     glBegin2D();
