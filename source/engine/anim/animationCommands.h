@@ -63,9 +63,10 @@ class ThrowingBallAnimation : public AnimationCommand {
     Vec2d startPos;
     Vec2d sliderEndPos;
     Vec2d landPos;
+    int throwTime;
 
     public:
-    ThrowingBallAnimation(int energy, int _startBeat, Vec2d _landPos);
+    ThrowingBallAnimation(int energy, int _startBeat, Vec2d _landPos, int time);
     virtual void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos);
 
 };

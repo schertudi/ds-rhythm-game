@@ -9,7 +9,7 @@
 void EngineController::init () {
     frame = 0;
     combo = 0;
-    isAutomatedPlay = false;
+    isAutomatedPlay = true;
     audioPlayer = AudioPlayer();
     timeTracker.init(bpm, numSubBeats);
     
@@ -49,8 +49,8 @@ void EngineController::update() {
     int energyLevel = energyLevelTracker.getEnergyLevel();
     animationCommandManager.updateAnimations(songPos, beatStates, penPos, energyLevel);
 
-    powerupInfo p = energyLevelTracker.getCurrPowerupInfo();
-    energyLevelDisplay.draw(p, songPos);
+    //powerupInfo p = energyLevelTracker.getCurrPowerupInfo();
+    //energyLevelDisplay.draw(p, songPos);
 
     int fineBeat = songPos.globalBeat * songPos.numSubBeats + songPos.subBeat;
 

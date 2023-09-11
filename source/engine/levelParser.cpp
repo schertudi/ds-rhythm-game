@@ -22,45 +22,103 @@ namespace LevelDataParser {
         };
 
         std::vector<barConfig> getLevelData() {
-            beatsInBar bar1 = {{
-                {"single 20,50 monotone quart", "1 burstingBeat"},
+            beatsInBar intro1 = {{
+                {"single 88,96 monotone quart"},
                 {"none"},
-                {"single 50,50 monotone quart", "2 burstingBeat"},
+                {"single 168,96 monotone quart"},
                 {"none"},
-                {"single 80,50 monotone quart"},
+                {"single 88,121 monotone quart"},
                 {"none"},
-                {"single 110,50 monotone quart"} 
-                //number before animation indicates lowest possible level needed for this to play
+                {"single 128,121 monotone quart"},
+                {"single 168,121 monotone quart"},
             }};
 
-            beatsInBar bar2 = {{
-                {"single 20,100 monotone quart", "1 burstingBeat", "2 sineWave top 4", "3 sineWave bottom 4"},
+            beatsInBar intro2 = {{
+                {"single 168,96 monotone quart"},
                 {"none"},
+                {"single 88,96 monotone quart"},
                 {"none"},
+                {"single 168,71 monotone quart"},
                 {"none"},
-                {"single 80,100 monotone quart", "3 burstingBeat"}
+                {"single 128,71 monotone quart"},
+                {"single 88,71 monotone quart"},
             }};
 
-            beatsInBar bar3 = {{
-                {"slider 20,100 50,100 2 monotone quart"},
+            beatsInBar intro3 = {{
+                {"single 88,96 monotone quart"},
                 {"none"},
+                {"single 168,96 monotone quart"},
                 {"none"},
-                {"none"},
-                {"single 80,100 monotone quart"}
+                {"single 128,121 monotone quart"}
             }};
 
+            
+            beatsInBar verse1 = {{
+                {"single 32,128 monotone quart", "1 diagonalBouncingBall 2 1"},
+                {"single 64,128 monotone quart"},
+                {"single 96,128 monotone quart"},
+                {"none"},
+                {"single 160,128 monotone quart", "1 diagonalBouncingBall 3 1"},
+                {"single 192,128 monotone quart"},
+                {"single 224,128 monotone quart"},
+            }};
+            
+
+            /*
+            beatsInBar verse1 = {{
+                {"single 32,128 monotone quart", "1 diagonalBouncingBall 4 2"},
+                {"none"},
+                {"single 96,128 monotone quart"},
+                {"none"},
+                {"single 160,128 monotone quart"},
+                {"none"},
+                {"single 224,128 monotone quart"},
+            }};
+            */
+
+            beatsInBar verse2 = {{
+                {"single 224,98 monotone quart"},
+                {"none"},
+                {"single 192,128 monotone quart"},
+                {"none"},
+                {"slider 128,98 70,98 2 monotone quart", "1 throwBall 32,128 1"}
+            }};
+
+            beatsInBar verse3 = {{
+                {"slider 188,76 68,76 6 monotone quart", "1 slideStarfish"}
+            }};
+
+             beatsInBar verse4 = {{
+                {"single 192,96 monotone quart", "1 dancingStarfish"},
+                {"none"},
+                {"single 128,76 monotone quart", "1 dancingStarfish"},
+                {"none"},
+                {"single 64,96 monotone half", "1 burstingBeat"},
+            }};
+
+            
             std::vector<barConfig> song = {
-            //if win combo we incr energy level, if lose we do nothing (or could decr). when energy level drops (eg 3 -> 1) we reset it to new val.
-                {bar3, 1}, 
-                {bar2},
-                {bar2, 2}, 
-                {bar2},
-                {bar2},
-                {bar2, 3},
-                {bar2},
-                {bar2, 1}, 
-                {bar2}, 
+                {verse2, 1},
+                {verse1}
             };
+            
+
+            /*
+            std::vector<barConfig> song = {
+                {intro1, 1},
+                {intro2},
+                {intro1},
+                {intro3},
+                {verse1},
+                {verse2},
+                {verse1},
+                {verse3},
+                {verse1},
+                {verse2},
+                {verse1},
+                {verse4}
+            };
+            */
 
             return song;
         }
@@ -251,11 +309,12 @@ namespace LevelDataParser {
                 AnimationCommand* anim = new SlidingStarfishAnimation(energy, startBeat);
                 return anim;
             } 
-            else if (split[1] == "throwBall" && split.size() == 4) {
+            else if (split[1] == "throwBall" && split.size() == 5) {
                 int energy = strToInt(split[0]);
                 int landX = strToInt(split[2]);
                 int landY = strToInt(split[3]);
-                AnimationCommand* anim = new ThrowingBallAnimation(energy, startBeat, {landX, landY});
+                int throwTime = strToInt(split[4]);
+                AnimationCommand* anim = new ThrowingBallAnimation(energy, startBeat, {landX, landY}, throwTime);
                 return anim;
             } 
             else if (split[1] == "diagonalBouncingBall" && split.size() == 4) {

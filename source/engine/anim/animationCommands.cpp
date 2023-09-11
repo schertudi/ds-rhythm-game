@@ -123,13 +123,14 @@ void SlidingStarfishAnimation::update(int beat, int progress, std::vector<playab
 }
 
 
-ThrowingBallAnimation::ThrowingBallAnimation(int energy, int _startBeat, Vec2d _landPos) { //can customize this with specific parameters
+ThrowingBallAnimation::ThrowingBallAnimation(int energy, int _startBeat, Vec2d _landPos, int time) { //can customize this with specific parameters
     startBeat = _startBeat;
     //endBeat = _endBeat;
     //bstartPos = _startPos;
     //sliderEndPos = _sliderEndPos;
     landPos = _landPos;
     setEnergyLevel(energy);
+    throwTime = time;
 }
 
 void ThrowingBallAnimation::update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) {
@@ -142,10 +143,13 @@ void ThrowingBallAnimation::update(int beat, int progress, std::vector<playableB
 
     if (state == playerStatus::SLIDER_HIT) {
         Animator::slidingCircle(startPos, sliderEndPos, penPos);
-    } else if (state == playerStatus::SLIDER_END) {
+    } else if (state == playerStatus::SLIDER_END || state == playerStatus::CORRECT_HIT) {
         int animStart = convertBeatToTime(endBeat, 0);
-        int animEnd = convertBeatToTime(endBeat + 2, 0);
+        int animEnd = convertBeatToTime(endBeat + throwTime, 0);
         int currTime = convertBeatToTime(beat, progress);
+        if (currTime > animEnd) {
+            return;
+        }
         Animator::flyingBall(animStart, animEnd, currTime, sliderEndPos, landPos, 10);
     }
     
