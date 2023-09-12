@@ -252,7 +252,7 @@ namespace Animator {
 
         int width = lerp(startThickness, endThickness, lineProgress);
 
-        vectorWideningLine(start.x, start.y, starfishPos.x, starfishPos.y, startThickness, width, {10, 10, 10}, ANIMATION_MG_LAYER);
+        //vectorWideningLine(start.x, start.y, starfishPos.x, starfishPos.y, startThickness, width, {10, 10, 10}, ANIMATION_MG_LAYER);
 
         dancingStarfish(starfishPos, progress, 20, true, angleDeg - 80, angleDeg + 80);
     }
@@ -260,7 +260,7 @@ namespace Animator {
     void slidingCircle(Vec2d start, Vec2d end, Vec2d penPos) {
         std::tuple<Vec2d, int> proj = projectPointToLine(start, end, penPos);
         Vec2d circlePos = std::get<0>(proj);
-        vectorThickLine(start.x, start.y, end.x, end.y, 2, {10, 10, 10}, ANIMATION_FG_LAYER);
+        //vectorThickLine(start.x, start.y, end.x, end.y, 2, {10, 10, 10}, ANIMATION_FG_LAYER);
         vectorCircle(circlePos.x, circlePos.y, 10, {31, 31, 31}, ANIMATION_FG_LAYER);
     }
 
@@ -368,5 +368,36 @@ namespace Animator {
         vectorCircle(pos.x, pos.y, objRadius, {31, 31, 31}, ANIMATION_FG_LAYER);
 
 
+    }
+
+    void pulsingCircle(int startTime, int endTime, int currTime, Vec2d pos, int maxR) {
+        int t = inverseLerp(startTime, endTime, currTime);
+        if (t > 100) t = 100;
+        if (t < 0) t = 0;
+
+        int minR = 5;
+        int r;
+
+        //at t=0, radius = min
+        //at t=50, radius =  max
+        //at t=100, radius = min
+        if (t < 50) {
+            r = lerp(minR, maxR, t * 2);
+        } else {
+            r = lerp(maxR, minR, (t-50) * 2);
+        }
+
+        vectorCircle(pos.x, pos.y, r, {31, 31, 31}, ANIMATION_MG_LAYER);
+    }
+
+    void slidingBall(int startTime, int endTime, int currTime, Vec2d start, Vec2d end) {
+        int t = inverseLerp(startTime, endTime, currTime);
+        if (t > 100) t = 100;
+        if (t < 0) t = 0;
+
+        int x = lerp(start.x, end.x, t);
+        int y = lerp(start.y, end.y, t);
+
+        vectorCircle(x, y, 7, {31, 31, 31}, ANIMATION_MG_LAYER);
     }
 };

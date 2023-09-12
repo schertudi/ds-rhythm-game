@@ -49,8 +49,8 @@ void EngineController::update() {
     int energyLevel = energyLevelTracker.getEnergyLevel();
     animationCommandManager.updateAnimations(songPos, beatStates, penPos, energyLevel);
 
-    //powerupInfo p = energyLevelTracker.getCurrPowerupInfo();
-    //energyLevelDisplay.draw(p, songPos);
+    powerupInfo p = energyLevelTracker.getCurrPowerupInfo();
+    energyLevelDisplay.draw(p, songPos);
 
     int fineBeat = songPos.globalBeat * songPos.numSubBeats + songPos.subBeat;
 

@@ -33,4 +33,8 @@ namespace Animator {
 
     void burstingObject(int beat, int progress, int startBeat, int endBeat, int offset, Vec2d pos);
 
+    void pulsingCircle(int startTime, int endTime, int currTime, Vec2d pos, int maxRadius);
+
+    void slidingBall(int startTime, int endTime, int currTime, Vec2d start, Vec2d end);
+
 }

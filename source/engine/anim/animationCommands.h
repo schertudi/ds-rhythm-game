@@ -141,3 +141,37 @@ class DancingStarfishAnimation : public AnimationCommand {
     DancingStarfishAnimation(int energy, int _startBeat);
     virtual void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos);
 };
+
+class PulsingCircleAnimation : public AnimationCommand {
+    private:
+    int hitBeat;
+    int pulseTime = 300;
+
+    public:
+    PulsingCircleAnimation(int energy, int beat);
+    virtual void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos);
+};
+
+class PulseNextCircleAnimation : public AnimationCommand {
+    private:
+    int hitBeat;
+    bool playNext = false;
+    Vec2d pos;
+
+    public:
+    PulseNextCircleAnimation(int energy, int beat);
+    virtual void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos);
+};
+
+class SlidingBallAnimation : public AnimationCommand {
+    private:
+    int hitBeat;
+    Vec2d slideFrom;
+    Vec2d slideTo;
+    int slideTime;
+    bool keepPlaying = false;
+
+    public:
+    SlidingBallAnimation(int energy, int beat, Vec2d to, int time);
+    virtual void update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos);
+};

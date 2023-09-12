@@ -23,38 +23,49 @@ namespace LevelDataParser {
 
         std::vector<barConfig> getLevelData() {
             beatsInBar intro1 = {{
-                {"single 88,96 monotone quart"},
+                {"single 88,24 monotone quart", "1 pulseNextCircle", "1 pulseCircle"},
                 {"none"},
-                {"single 168,96 monotone quart"},
+                {"single 168,24 monotone quart", "1 pulseNextCircle"},
                 {"none"},
-                {"single 88,121 monotone quart"},
+                {"single 88,48 monotone quart", "1 pulseNextCircle"},
                 {"none"},
-                {"single 128,121 monotone quart"},
-                {"single 168,121 monotone quart"},
+                {"single 168,72 monotone quart"},
+                {"single 125,72 monotone quart"},
             }};
 
             beatsInBar intro2 = {{
-                {"single 168,96 monotone quart"},
+                {"single 88,72 monotone quart", "1 pulseNextCircle"},
                 {"none"},
-                {"single 88,96 monotone quart"},
+                {"single 168,96 monotone quart", "1 pulseNextCircle"},
                 {"none"},
-                {"single 168,71 monotone quart"},
+                {"single 88,96 monotone quart", "1 pulseNextCircle"},
                 {"none"},
-                {"single 128,71 monotone quart"},
-                {"single 88,71 monotone quart"},
+                {"single 168,120 monotone quart"},
+                {"single 125,120 monotone quart"},
             }};
 
             beatsInBar intro3 = {{
-                {"single 88,96 monotone quart"},
+                {"single 88,120 monotone quart", "1 pulseNextCircle"},
                 {"none"},
-                {"single 168,96 monotone quart"},
+                {"single 168,144 monotone quart", "1 pulseNextCircle"},
                 {"none"},
-                {"single 128,121 monotone quart"}
+                {"single 88,144 monotone quart", "1 pulseNextCircle"},
+                {"none"},
+                {"single 168,168 monotone quart"},
+                {"single 125,168 monotone quart"},
+            }};
+
+            beatsInBar intro4 = {{
+                {"single 88,168 monotone quart"},
+                {"none"},
+                {"single 168,96 monotone quart", "1 pulseCircle"},
+                {"none"},
+                {"single 88,24 monotone quart", "1 pulseCircle"}
             }};
 
             
             beatsInBar verse1 = {{
-                {"single 32,128 monotone quart", "1 diagonalBouncingBall 2 1"},
+                {"single 32,128 monotone quart", "1 diagonalBouncingBall 2 1"}, //, "2 sineWave top 16", "2 sineWave bottom 16"
                 {"single 64,128 monotone quart"},
                 {"single 96,128 monotone quart"},
                 {"none"},
@@ -77,9 +88,9 @@ namespace LevelDataParser {
             */
 
             beatsInBar verse2 = {{
-                {"single 224,98 monotone quart"},
+                {"single 224,98 monotone quart", "1 slideBall 192,128 150", "2 dancingStarfish"},
                 {"none"},
-                {"single 192,128 monotone quart"},
+                {"single 192,128 monotone quart", "1 slideBall 128,98 150", "2 dancingStarfish"},
                 {"none"},
                 {"slider 128,98 70,98 2 monotone quart", "1 throwBall 32,128 1"}
             }};
@@ -89,27 +100,41 @@ namespace LevelDataParser {
             }};
 
              beatsInBar verse4 = {{
-                {"single 192,96 monotone quart", "1 dancingStarfish"},
+                {"single 192,96 monotone quart", "2 dancingStarfish"},
                 {"none"},
-                {"single 128,76 monotone quart", "1 dancingStarfish"},
+                {"single 128,76 monotone quart", "2 dancingStarfish"},
                 {"none"},
                 {"single 64,96 monotone half", "1 burstingBeat"},
             }};
 
-            
+            /*
             std::vector<barConfig> song = {
-                {verse2, 1},
+                {verse3, 1},
                 {verse1}
             };
+            */
+            
             
 
-            /*
+            
             std::vector<barConfig> song = {
                 {intro1, 1},
                 {intro2},
-                {intro1},
                 {intro3},
+                {intro4},
+
+                //first part
                 {verse1},
+                {verse2},
+                {verse1},
+                {verse3},
+                {verse1},
+                {verse2},
+                {verse1},
+                {verse4},
+
+                //second part
+                {verse1, 2},
                 {verse2},
                 {verse1},
                 {verse3},
@@ -118,7 +143,8 @@ namespace LevelDataParser {
                 {verse1},
                 {verse4}
             };
-            */
+            
+            
 
             return song;
         }
@@ -332,6 +358,24 @@ namespace LevelDataParser {
             else if (split[1] == "dancingStarfish" && split.size() == 2) {
                 int energy = strToInt(split[0]);
                 AnimationCommand* anim = new DancingStarfishAnimation(energy, startBeat);
+                return anim;
+            } 
+            else if (split[1] == "pulseCircle" && split.size() == 2) {
+                int energy = strToInt(split[0]);
+                AnimationCommand* anim = new PulsingCircleAnimation(energy, startBeat);
+                return anim;
+            }
+            else if (split[1] == "pulseNextCircle" && split.size() == 2) {
+                int energy = strToInt(split[0]);
+                AnimationCommand* anim = new PulseNextCircleAnimation(energy, startBeat);
+                return anim;
+            }
+            else if (split[1] == "slideBall" && split.size() == 5) {
+                int energy = strToInt(split[0]);
+                int landX = strToInt(split[2]);
+                int landY = strToInt(split[3]);
+                int throwTime = strToInt(split[4]);
+                AnimationCommand* anim = new SlidingBallAnimation(energy, startBeat, {landX, landY}, throwTime);
                 return anim;
             }
             Debugger::error("bad anim b%i: %s", startBeat, config.c_str());

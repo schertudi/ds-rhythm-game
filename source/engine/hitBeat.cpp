@@ -55,14 +55,17 @@ SingleHitBeat::SingleHitBeat(int _beat, int _x, int _y, int _len, int _pitch) {
 
 void SingleHitBeat::render(int progress) {
     int r;
-    if (progress < 0) { r = 7; }
-    else if (progress == 100) { r = 5; }
+    if (progress < 0) { r = 5; }
+    else if (progress == 100) { r = 10; }
     else if (progress > 100) { r = 2; }
-    else r = 7 - progress / 20;
+    else r = 5 + progress / 20;
 
-    int a = 20;
-    if (progress == 100) a = 31;
-    vectorCircle(x, y, r, {a, 20, 20}, BEATPATH_LAYER);
+    if (progress == 100) {
+        vectorCircle(x, y, r, {0, 20, 10}, BEATPATH_LAYER);
+    } else {
+        vectorCircle(x, y, r, {20, 20, 20}, BEATPATH_LAYER);
+    }
+    
 }
 
 bool SingleHitBeat::isHit(int touchX, int touchY, int globalBeat, int progressToNext, int margin) {
@@ -128,15 +131,19 @@ SliderHitBeat::SliderHitBeat(int _startBeat, int _endBeat, int _startX, int _sta
 }
 
 void SliderHitBeat::render(int progress)  {
-    int bigRadius = 7;
+    int bigRadius = 10;
     int smallRadius = 3;
-    vectorCircle(endX, endY, bigRadius, {20, 20, 20}, BEATPATH_LAYER - 1);
+    int midRadius = 7;
+    vectorCircle(endX, endY, smallRadius, {20, 20, 20}, BEATPATH_LAYER - 100);
     
     if (progress < 100) {
-        int r = lerp(bigRadius, smallRadius, progress);
-        vectorCircle(startX, startY, r, {15, 15, 31}, BEATPATH_LAYER + 1);
+        int r = lerp(smallRadius, bigRadius, progress);
+        vectorCircle(startX, startY, r, {15, 15, 31}, BEATPATH_LAYER - 99);
         
-        vectorThickLine(startX, startY, endX, endY, bigRadius, {20, 20, 20}, BEATPATH_LAYER, false);
+        vectorThickLine(startX, startY, endX, endY, smallRadius, {20, 20, 20}, BEATPATH_LAYER - 100, false);
+    } else if (progress == 100) {
+        vectorCircle(startX, startY, bigRadius, {0, 20, 10}, BEATPATH_LAYER - 99);
+        vectorThickLine(startX, startY, endX, endY, smallRadius, {20, 20, 20}, BEATPATH_LAYER - 100, false);
     } else if (progress <= 200) {
         int lerpPos = progress - 100; //so 0 if at start of slide and 100 if at end of slide
         if (lerpPos < 0) lerpPos = 0;
@@ -144,11 +151,12 @@ void SliderHitBeat::render(int progress)  {
         int targetX = lerp(startX, endX, lerpPos);
         int targetY = lerp(startY, endY, lerpPos);
         
-        if (progress == 100) { vectorCircle(startX, startY, smallRadius, {15, 15, 31}, BEATPATH_LAYER); }
-        vectorThickLine(startX, startY, targetX, targetY, smallRadius, {15, 15, 31}, BEATPATH_LAYER, false);
+        //if (progress == 100) { vectorCircle(startX, startY, bigRadius, {15, 15, 31}, BEATPATH_LAYER); }
+        vectorCircle(startX, startY, midRadius, {15, 15, 31}, BEATPATH_LAYER - 100);
+        vectorThickLine(startX, startY, targetX, targetY, midRadius, {15, 15, 31}, BEATPATH_LAYER - 100, false);
         
-        vectorThickLine(targetX, targetY, endX, endY, bigRadius, {20, 20, 20}, BEATPATH_LAYER, false);
-        vectorCircle(targetX, targetY, smallRadius, {10, 10, 25}, BEATPATH_LAYER + 2);
+        vectorThickLine(targetX, targetY, endX, endY, smallRadius, {20, 20, 20}, BEATPATH_LAYER - 100, false);
+        vectorCircle(targetX, targetY, bigRadius, {15, 15, 31}, BEATPATH_LAYER - 99);
     } 
     
 }

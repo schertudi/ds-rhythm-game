@@ -325,3 +325,82 @@ void DancingStarfishAnimation::update(int beat, int progress, std::vector<playab
         Animator::dancingStarfish(pos, progress, radius);
     } 
 }
+
+PulsingCircleAnimation::PulsingCircleAnimation(int energy, int beat) {
+    hitBeat = beat;
+    setEnergyLevel(energy);
+}
+
+void PulsingCircleAnimation::update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) {
+
+    if (beat > hitBeat) { return; }
+    int index = getBeatIndex(hitBeat, beatStates);
+    if (index == -1) return;
+    playerStatus state = beatStates[index].playerState;
+    Vec2d pos = beatStates[index].startPos;
+
+    int time = beat * 100 + progress;
+    int hitTime = (hitBeat + 2) * 100;
+
+    Animator::pulsingCircle(hitTime - 400, hitTime - 200, time, pos, 20);
+    if (state == playerStatus::CORRECT_HIT) {
+        
+    }
+    
+}
+
+PulseNextCircleAnimation::PulseNextCircleAnimation(int energy, int beat) {
+    hitBeat = beat;
+    setEnergyLevel(energy);
+}
+
+void PulseNextCircleAnimation::update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) {
+    if (playNext) {
+        int time = beat * 100 + progress;
+        int hitTime = (hitBeat + 2) * 100;
+        if (time > hitTime) {return;}
+        Animator::pulsingCircle(hitTime - 200, hitTime, time, pos, 30);
+    }
+
+    if (beat > hitBeat) { return; }
+    int index = getBeatIndex(hitBeat, beatStates);
+    if (index == -1) return;
+    playerStatus state = beatStates[index].playerState;
+
+    int nextIndex = getBeatIndex(hitBeat+2, beatStates);
+    if (nextIndex == -1) return;
+    pos = beatStates[nextIndex].startPos;
+
+    if (state == playerStatus::CORRECT_HIT) {
+        playNext = true;
+    }
+    
+}
+
+SlidingBallAnimation::SlidingBallAnimation(int energy, int beat, Vec2d to, int time) {
+    hitBeat = beat;
+    slideTo = to;
+    slideTime = time;
+    setEnergyLevel(energy);
+}
+
+void SlidingBallAnimation::update(int beat, int progress, std::vector<playableBeatStatus> beatStates, Vec2d penPos) {
+    if (keepPlaying) {
+        int time = beat * 100 + progress;
+        int endTime = hitBeat * 100 + slideTime;
+        if (time > endTime) { return; }
+        Animator::slidingBall(hitBeat * 100, endTime, time, slideFrom, slideTo);
+    }
+
+    if (beat > hitBeat) { return; }
+    int index = getBeatIndex(hitBeat, beatStates);
+    if (index == -1) return;
+    playerStatus state = beatStates[index].playerState;
+    slideFrom = beatStates[index].startPos;
+
+
+    if (state == playerStatus::CORRECT_HIT) {
+        keepPlaying = true;
+    }
+    
+}
