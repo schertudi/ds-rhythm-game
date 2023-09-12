@@ -15,7 +15,7 @@ void EngineController::init () {
     
     //load in level data at this point too
     levelData levelData = LevelDataParser::setup(numSubBeats * numBeatsInBar);
-    path.init(2, 60, levelData.beatInteracts);
+    path.init(2, 50, levelData.beatInteracts);
     animationCommandManager.init(levelData.animations);
     energyLevelTracker.init(levelData);
 }

@@ -40,6 +40,7 @@ AudioPlayer::AudioPlayer() {
     mmLoadEffect(SFX_C4_4_BEATS);
     mmLoadEffect(SFX_C4_HALF_BEAT);
     mmLoadEffect(SFX_C4_QUART_BEAT);
+    mmLoadEffect(SFX_KICK);
 
     mmSetEventHandler(myEventHandler);
 
@@ -57,7 +58,7 @@ AudioPlayer::AudioPlayer() {
 }
 
 void AudioPlayer::startMusic() {
-    mmSetModuleVolume(1024 / 2); //50% volume
+    //mmSetModuleVolume(1024 * 80 / 100); //50% volume
     
     
     
@@ -72,9 +73,11 @@ void AudioPlayer::metronome(int beat) {
 }
 
 void AudioPlayer::playNote(int length, int note) {
-    //mmEffect(SFX_CLICK2);
-    //return;
-    mm_sfxhand handle = 0;
+    
+    mm_sfxhand handle = mmEffect(SFX_KICK);
+    //mmEffectRate(handle, OCT_4 * NOTE_F / 100);
+    return;
+    //mm_sfxhand handle = 0;
     mmEffectCancel(SFX_C4_1_BEAT);
     mmEffectCancel(SFX_C4_2_BEATS);
     mmEffectCancel(SFX_C4_3_BEATS);
@@ -104,8 +107,8 @@ void AudioPlayer::playNote(int length, int note) {
             return;
             break;
         }
-
-    if (usePitch) mmEffectRate(handle, note / 100);
+    //mmEffectRate(handle, 900);
+    //if (usePitch) mmEffectRate(handle, note / 100);
     //mmEffectRelease(handle);
 }
 
