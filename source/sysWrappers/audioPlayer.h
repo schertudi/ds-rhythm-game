@@ -19,5 +19,7 @@ class AudioPlayer {
     void playNote(int length, int note);
 
     void setOctave(int _octave);
+
+    void enableJingle();
 };
 

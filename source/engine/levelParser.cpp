@@ -65,11 +65,11 @@ namespace LevelDataParser {
 
             
             beatsInBar verse1 = {{
-                {"single 32,128 monotone quart", "1 diagonalBouncingBall 2 1"}, //, "2 sineWave top 16", "2 sineWave bottom 16"
+                {"single 32,128 monotone quart", "1 diagonalBouncingBall 3 1", "2 pulseCircle", "2 sineWave top 16", "2 sineWave bottom 16"}, //, "2 sineWave top 16", "2 sineWave bottom 16"
                 {"single 64,128 monotone quart"},
                 {"single 96,128 monotone quart"},
                 {"none"},
-                {"single 160,128 monotone quart", "1 diagonalBouncingBall 3 1"},
+                {"single 160,128 monotone quart", "1 diagonalBouncingBall 3 1", "2 pulseCircle"},
                 {"single 192,128 monotone quart"},
                 {"single 224,128 monotone quart"},
             }};
@@ -88,9 +88,9 @@ namespace LevelDataParser {
             */
 
             beatsInBar verse2 = {{
-                {"single 224,98 monotone quart", "1 slideBall 192,128 150", "2 dancingStarfish"},
+                {"single 224,98 monotone quart", "1 slideBall 192,128 150", "2 pulseCircle"},
                 {"none"},
-                {"single 192,128 monotone quart", "1 slideBall 128,98 150", "2 dancingStarfish"},
+                {"single 192,128 monotone quart", "1 slideBall 128,98 150", "2 pulseCircle"},
                 {"none"},
                 {"slider 128,98 70,98 2 monotone quart", "1 throwBall 32,128 1"}
             }};
@@ -99,13 +99,23 @@ namespace LevelDataParser {
                 {"slider 188,76 68,76 6 monotone quart", "1 slideStarfish"}
             }};
 
-             beatsInBar verse4 = {{
+            beatsInBar verse4 = {{
+                {"single 192,160 monotone quart", "1 fillTank 3 2"},
+                {"none"},
+                {"single 192,96 monotone quart"},
+                {"none"},
+                {"single 192,32 monotone half", "1 burstingBeat"},
+            }};
+
+            /*
+            beatsInBar verse4 = {{
                 {"single 192,96 monotone quart", "2 dancingStarfish"},
                 {"none"},
                 {"single 128,76 monotone quart", "2 dancingStarfish"},
                 {"none"},
                 {"single 64,96 monotone half", "1 burstingBeat"},
-            }};
+            }}
+            */
 
             /*
             std::vector<barConfig> song = {

@@ -84,7 +84,7 @@ void FillTankAnimation::update(int beat, int progress, std::vector<playableBeatS
     }
 
     int now = beat * 100 + progress;
-    Animator::fillTank(stateTracker.relativeBeat, now - timeAtHit, numBeats, {0, 20, 20});
+    Animator::fillTank(stateTracker.relativeBeat, now - timeAtHit, numBeats, {5, 5, 5});
 
     if (stateTracker.relativeBeat == numBeats - 1) { //last beat
         //animate fun at spot
@@ -92,7 +92,7 @@ void FillTankAnimation::update(int beat, int progress, std::vector<playableBeatS
         if (index == -1) {return; }
         Vec2d pos = beatStates[index].startPos;
         int radius = 20 - progress / 10;
-        Animator::dancingStarfish(pos, progress, radius);
+        //Animator::dancingStarfish(pos, progress, radius);
     }
     
 }
@@ -263,6 +263,10 @@ void DiagonalBouncingBallAnimation::update(int beat, int progress, std::vector<p
 
         if (state == playerStatus::EARLY_HIT || state == playerStatus::MISS
             || nextState == playerStatus::EARLY_HIT || nextState == playerStatus::MISS) {
+            //killed = true; //TODO this triggers incorrectly sometimes (beat gap of 1). disable it for now, it just sits there
+        }
+
+        if (state == playerStatus::EARLY_HIT || state == playerStatus::MISS) {
             killed = true;
         }
     }

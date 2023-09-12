@@ -105,6 +105,23 @@ namespace Animator {
     void sineWave(int beat, int progress, direction wallSide, Colour colour) { //wall=1: top; wall=2: bottom
         glBegin2D();
 
+        int offset = progress;
+        if (beat % 2 == 0) {
+            offset = 100 -progress;
+        }
+        offset /= 10;
+
+        if (wallSide == direction::TOP) {
+            vectorRect(0, 0, 256, 10 + offset, {5, 5, 5}, ANIMATION_BG_LAYER);
+        } else {
+            vectorRect(0, 192 - 10 - offset, 256, 192, {5, 5, 5}, ANIMATION_BG_LAYER);
+        }
+        
+
+        glEnd2D();
+    /*
+        glBegin2D();
+
         int curveDepth = cosLerp((progress * 32767) / 100) / 500;
 
         //draw a filled circle using triangles
@@ -138,6 +155,7 @@ namespace Animator {
         }
                 
         glEnd2D();
+        */
     }
 
     int fullDancingStarfishHelper(int i, int smoothProgress, int radius, int shimmerRot) {

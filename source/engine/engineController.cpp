@@ -9,19 +9,20 @@
 void EngineController::init () {
     frame = 0;
     combo = 0;
-    isAutomatedPlay = true;
+    isAutomatedPlay = false;
     audioPlayer = AudioPlayer();
     timeTracker.init(bpm, numSubBeats);
     
     //load in level data at this point too
     levelData levelData = LevelDataParser::setup(numSubBeats * numBeatsInBar);
-    path.init(2, 50, levelData.beatInteracts);
+    path.init(2, 60, levelData.beatInteracts);
     animationCommandManager.init(levelData.animations);
     energyLevelTracker.init(levelData);
 }
 
 void EngineController::update() {
     frame += 1;
+    int oldEnergyLevel = energyLevelTracker.getEnergyLevel();
 
     int beatStatus = timeTracker.updateBeat(frame);
     songPosition songPos = timeTracker.getSongPosition();
@@ -47,6 +48,9 @@ void EngineController::update() {
     updateHitBeats(beatStates, songPos);
 
     int energyLevel = energyLevelTracker.getEnergyLevel();
+    if (energyLevel > oldEnergyLevel) {
+        audioPlayer.enableJingle();
+    }
     animationCommandManager.updateAnimations(songPos, beatStates, penPos, energyLevel);
 
     powerupInfo p = energyLevelTracker.getCurrPowerupInfo();

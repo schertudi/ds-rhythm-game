@@ -61,9 +61,18 @@ void SingleHitBeat::render(int progress) {
     else r = 5 + progress / 20;
 
     if (progress == 100) {
-        vectorCircle(x, y, r, {0, 20, 10}, BEATPATH_LAYER);
+        if (beat >= 88 && beat < 96) {
+            vectorCircle(x, y, r, {0, 10, 28}, BEATPATH_LAYER);
+        } else {
+            vectorCircle(x, y, r, {0, 20, 10}, BEATPATH_LAYER);
+        }
+        
     } else {
-        vectorCircle(x, y, r, {20, 20, 20}, BEATPATH_LAYER);
+        if (beat >= 88 && beat < 96) {
+            vectorCircle(x, y, r, {10, 15, 20}, BEATPATH_LAYER);
+        } else {
+            vectorCircle(x, y, r, {20, 20, 20}, BEATPATH_LAYER);
+        }
     }
     
 }

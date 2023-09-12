@@ -30,7 +30,8 @@ AudioPlayer::AudioPlayer() {
     //access soundbank that is loaded into memory
     mmInitDefaultMem( (mm_addr)soundbank_bin );
     //mmSelectMode(MM_MODE_C);
-    mmLoad( MOD_IEVAN2 );
+    mmLoad( MOD_IEVAN_MUTE1 );
+    mmLoad( MOD_IEVAN_MUTE2 );
 
     mmLoadEffect(SFX_CLICK1);
     mmLoadEffect(SFX_CLICK2);
@@ -58,11 +59,12 @@ AudioPlayer::AudioPlayer() {
 }
 
 void AudioPlayer::startMusic() {
-    //mmSetModuleVolume(1024 * 80 / 100); //50% volume
+    mmSetModuleVolume(1024 * 40 / 100); //40% volume
+    mmSetJingleVolume(0);
     
     
-    
-    mmStart(MOD_IEVAN2, MM_PLAY_ONCE);
+    mmStart(MOD_IEVAN_MUTE1, MM_PLAY_ONCE);
+    mmJingle(MOD_IEVAN_MUTE2);
 }
 
 void AudioPlayer::metronome(int beat) {
@@ -114,4 +116,8 @@ void AudioPlayer::playNote(int length, int note) {
 
 void AudioPlayer::setOctave(int _octave) {
     octave = _octave;
+}
+
+void AudioPlayer::enableJingle() {
+    mmSetJingleVolume(1024 * 40 / 100);
 }
