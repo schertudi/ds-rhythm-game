@@ -6,7 +6,7 @@
 #include "sysWrappers/debugTools.h"
 #include "engine/engineController.h"
 
-//inputs: click beat on red to play it, press left trigger (Q key on melonDS) to toggle automated/manual playthrough
+//inputs: click beat on green to play it, press left trigger (Q key on melonDS) to toggle automated/manual playthrough
 
 
 

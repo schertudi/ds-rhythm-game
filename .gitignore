@@ -5,3 +5,6 @@ melonDS
 run-melon.sh
 *.elf
 *.nds
+run-openmpt.sh
+ideas
+/resources/
