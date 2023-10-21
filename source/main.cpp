@@ -6,6 +6,8 @@
 #include "sysWrappers/debugTools.h"
 #include "engine/engineController.h"
 
+#include "sceneManager.h"
+
 //inputs: click beat on green to play it, press left trigger (Q key on melonDS) to toggle automated/manual playthrough
 
 
@@ -26,13 +28,17 @@ int main( int argc, char *argv[] )
 	consoleDemoInit();
 
 	Debugger::resetErrorMessage();
-	EngineController engineController;
-	engineController.init();
+	//EngineController engineController;
+	//engineController.init();
+
+	SceneManager manager;
 
 	while(1) {
 		Debugger::resetFrameLines();
 		
-		engineController.update();
+		//engineController.update();
+
+		manager.update();
 
 		Debugger::render();
 

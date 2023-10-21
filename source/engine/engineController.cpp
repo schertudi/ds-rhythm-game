@@ -6,7 +6,7 @@
 
 
 
-void EngineController::init () {
+void EngineController::load () {
     frame = 0;
     combo = 0;
     isAutomatedPlay = false;
@@ -20,7 +20,10 @@ void EngineController::init () {
     energyLevelTracker.init(levelData);
 }
 
-void EngineController::update() {
+void EngineController::unload () {
+}
+
+sceneStates EngineController::update() {
     frame += 1;
     int oldEnergyLevel = energyLevelTracker.getEnergyLevel();
 
@@ -65,6 +68,8 @@ void EngineController::update() {
     Debugger::framePrint("combo %i", combo);
     Debugger::framePrint("energy %i", energyLevel);
     Debugger::framePrint("automated %i", isAutomatedPlay);
+
+    return sceneStates::CURRENT;
 
 }
 

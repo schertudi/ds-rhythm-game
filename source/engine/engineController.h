@@ -7,14 +7,18 @@
 #include "energyLevelTracker.h"
 #include "energyLevelDisplay.h"
 #include "../genericTypes.h"
+#include "../sceneObject.h"
 
-class EngineController {
+
+class EngineController : public SceneObject {
 
     public:
 
-    void init ();
+    void load () override;
 
-    void update();
+    sceneStates update() override;
+
+    void unload() override;
 
     private:
     int frame;
