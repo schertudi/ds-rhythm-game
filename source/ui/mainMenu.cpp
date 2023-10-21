@@ -87,9 +87,30 @@ class MainMenu : public SceneObject {
 
     public:
     void load() override {
-        Button tutBtn = Button( {10, 10}, {50, 50}, buttonCommand::LOAD_TUTORIAL);
-        Button playBtn = Button( {60, 10}, {110, 50}, buttonCommand::LOAD_GAME);
-        Button settingsBtn = Button( {120, 10}, {170, 50}, buttonCommand::LOAD_SETTINGS);
+        
+
+        int height = 192;
+        int width = 256;
+
+        int yPadding = 20;
+        int xPadding = 50;
+        int btnHeight = 30;
+
+        int y2Start = height / 2 - btnHeight / 2;
+        int y2End = height / 2 + btnHeight / 2; 
+
+        int y1End = y2Start - yPadding;
+        int y1Start = y1End - btnHeight;
+
+        int y3Start = y2End + yPadding;
+        int y3End = y3Start + btnHeight;
+
+        int xStart = xPadding;
+        int xEnd = width - xPadding;
+
+        Button tutBtn = Button( {xStart, y1Start}, {xEnd, y1End}, buttonCommand::LOAD_TUTORIAL);
+        Button playBtn = Button( {xStart, y2Start}, {xEnd, y2End}, buttonCommand::LOAD_GAME);
+        Button settingsBtn = Button( {xStart, y3Start}, {xEnd, y3End}, buttonCommand::LOAD_SETTINGS);
 
         buttons.push_back(tutBtn);
         buttons.push_back(playBtn);
