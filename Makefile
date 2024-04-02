@@ -25,7 +25,8 @@ BUILD		:=	build
 SOURCES		:=	source \
 				source/sysWrappers \
 				source/engine \
-				source/engine/anim
+				source/engine/anim \
+				source/sysWrappers/gl2dCustom
 DATA		:=	data  
 INCLUDES	:=	include
 GRAPHICS	:=	gfx
@@ -51,7 +52,7 @@ LDFLAGS	=	-specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:= -lmm9 -lgl2d -lnds9 
+LIBS	:= -lmm9 -lnds9 
  
  
 #---------------------------------------------------------------------------------

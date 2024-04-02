@@ -1,7 +1,6 @@
 #include <nds.h>
 #include <nds/arm9/console.h>
 #include <stdio.h>
-#include <gl2d.h>
 #include <tuple>
 #include "../../vscode_fix.h"
 #include "../../sysWrappers/vectorShapes.h"
@@ -103,7 +102,7 @@ namespace Animator {
     }
 
     void sineWave(int beat, int progress, direction wallSide, Colour colour) { //wall=1: top; wall=2: bottom
-        glBegin2D();
+        startShape();
 
         int offset = progress;
         if (beat % 2 == 0) {
@@ -118,9 +117,9 @@ namespace Animator {
         }
         
 
-        glEnd2D();
+        endShape();
     /*
-        glBegin2D();
+        startShape();
 
         int curveDepth = cosLerp((progress * 32767) / 100) / 500;
 
@@ -154,7 +153,7 @@ namespace Animator {
                             RGB15(colour.r, colour.g, colour.b), ANIMATION_BG_LAYER);
         }
                 
-        glEnd2D();
+        endShape();
         */
     }
 
@@ -219,7 +218,7 @@ namespace Animator {
         startAngle = normalizeAngle(startAngle);
         endAngle = normalizeAngle(endAngle);
 
-        glBegin2D();
+        startShape();
 
         //draw a filled circle using triangles
         int i;
@@ -242,13 +241,13 @@ namespace Animator {
             int y2 = (sinLerp(i + step) * (r2) ) >> 12;
 
             // draw a triangle
-            glTriangleFilled( xOrigin + x, yOrigin + y,
+            vectorTriangle( xOrigin + x, yOrigin + y,
                             xOrigin + x2, yOrigin + y2,
                             xOrigin, yOrigin,
-                            RGB15(10, 30, 10), ANIMATION_FG_LAYER);
+                            {10, 30, 10}, ANIMATION_FG_LAYER);
         }
                 
-        glEnd2D();
+        endShape();
     }
 
     void slidingStarfish(int beat, int progress, Vec2d start, Vec2d end, Vec2d penPos) {
