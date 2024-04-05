@@ -1,6 +1,7 @@
 #include "debugTools.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <nds/arm9/console.h>
 
 namespace Debugger {
 
@@ -75,6 +76,10 @@ namespace Debugger {
         for (i = 0; i < transientLines.size(); i++) {
 			iprintf("\x1b[%i;1H%s", i + lineOffset, transientLines[i].c_str());
 		}
+    }
+
+    void clearConsole() {
+        consoleClear();
     }
 
 };

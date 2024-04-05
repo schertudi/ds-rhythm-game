@@ -1,11 +1,39 @@
 #include <stdlib.h>
-#include <nds.h>
+#include <nds/ndstypes.h>
 #include <math.h>
 
 #include <tuple>
-#include "vscode_fix.h"
+#include "../vscode_fix.h"
 #include "mathHelpers.h"
 
+#include <nds/arm9/trig_lut.h>
+
+#define REG_SQRTCNT			(*(vu16*)(0x040002B0))
+#define SQRT_64				1
+#define SQRT_BUSY			(1<<15)
+#define REG_SQRT_PARAM		(*(vs64*) (0x040002B8))
+#define REG_SQRT_RESULT		(*(vu32*) (0x040002B4))
+
+s16 _cosLerp(s16 angle) {
+    return cosLerp(angle);
+}
+
+s16 _sinLerp(s16 angle) {
+    return sinLerp(angle);
+}
+
+int32 mySqrtf32(int32 a)
+{
+	REG_SQRTCNT = SQRT_64;
+
+	while(REG_SQRTCNT & SQRT_BUSY);
+
+	REG_SQRT_PARAM = ((int64)a) << 12;
+
+	while(REG_SQRTCNT & SQRT_BUSY);
+
+	return REG_SQRT_RESULT;
+}
 
 int intAtan2(int y, int x) {
     //http://dspguru.com/dsp/tricks/fixed-point-atan2-with-self-normalization/
@@ -60,7 +88,8 @@ int inverseLerp(int a, int b, int value) {
 }
 
 Vec2d normalizeVec(Vec2d vec) { //returns to 2dp, so 100 -> 1.0
-    int sqrtFixed = sqrtf32( (vec.x * vec.x + vec.y * vec.y) << 12 );
+    int32 input = (vec.x * vec.x + vec.y * vec.y) << 12;
+    int sqrtFixed = mySqrtf32( input );
     //int sqrtInt = sqrtFixed >> 12;
     //int sqrtFlt = sqrtFixed & 0xFFF;
     int xFixed = vec.x << 12;
@@ -86,7 +115,8 @@ int sqrDist(Vec2d a, Vec2d b) {
 }
 
 int dist(Vec2d a, Vec2d b) {
-    return sqrtf32(sqrDist(a, b) << 12 ) >> 12;
+    int32 input = sqrDist(a, b) << 12;
+    return mySqrtf32(input) >> 12;
 }
 
 Colour lerpColour(Colour c1, Colour c2, int t) {

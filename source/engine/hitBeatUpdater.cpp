@@ -1,8 +1,4 @@
-#include <nds.h>
-#include <nds/arm9/console.h>
-#include <stdio.h>
 #include "hitBeat.h"
-#include <iostream>
 #include "../noteDefinitions.h"
 #include "hitBeatUpdater.h"
 

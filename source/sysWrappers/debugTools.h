@@ -19,4 +19,6 @@ namespace Debugger {
 
     void render();
 
+    void clearConsole();
+
 };

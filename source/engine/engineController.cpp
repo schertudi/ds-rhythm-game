@@ -1,5 +1,4 @@
 
-#include <nds/arm9/console.h>
 #include "engineController.h"
 #include "../sysWrappers/debugTools.h"
 #include "../sysWrappers/input.h"
@@ -61,7 +60,7 @@ sceneStates EngineController::update() {
 
     int fineBeat = songPos.globalBeat * songPos.numSubBeats + songPos.subBeat;
 
-    consoleClear();
+    Debugger::clearConsole();
     Debugger::framePrint("time .%i.", fineBeat * 100 + songPos.subBeatProgress);
     Debugger::framePrint("beat .%i.", songPos.globalBeat);
     Debugger::framePrint("bar# %i", songPos.bar);

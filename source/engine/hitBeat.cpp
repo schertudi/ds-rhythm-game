@@ -1,5 +1,5 @@
 #include "../sysWrappers/vectorShapes.h"
-#include "../mathHelpers.h"
+#include "../sysWrappers/mathHelpers.h"
 #include "../layerDefinitions.h"
 #include "hitBeat.h"
 

@@ -7,7 +7,7 @@
 #include "gl2dCustom/gl2dCustom.h"
 #include "../vscode_fix.h"
 #include "vectorShapes.h"
-#include "../mathHelpers.h"
+#include "mathHelpers.h"
 
 
 #define BRAD_PI (1 << 14)

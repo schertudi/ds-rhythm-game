@@ -1,13 +1,15 @@
-#include <nds.h>
-#include <nds/arm9/console.h>
 #include <stdio.h>
 #include <tuple>
+#include <nds/ndstypes.h>
 #include "../../vscode_fix.h"
 #include "../../sysWrappers/vectorShapes.h"
-#include "../../mathHelpers.h"
+#include "../../sysWrappers/mathHelpers.h"
 #include "../../layerDefinitions.h"
 #include "../engineTypes.h"
 
+//TODO move to constants file
+#define SCREEN_HEIGHT 192
+#define SCREEN_WIDTH  256
 #define BRAD_PI (1 << 14)
 
 namespace Animator {
@@ -121,7 +123,7 @@ namespace Animator {
     /*
         startShape();
 
-        int curveDepth = cosLerp((progress * 32767) / 100) / 500;
+        int curveDepth = _cosLerp((progress * 32767) / 100) / 500;
 
         //draw a filled circle using triangles
         int i;
@@ -138,10 +140,10 @@ namespace Animator {
         for( i = 0; i < SCREEN_WIDTH; i += 1)
         {
             int x = i;
-            int y = yOffset + ((sinLerp((i - xOffset) * curveWidth) * (curveDepth) ) >> 12);
+            int y = yOffset + ((_sinLerp((i - xOffset) * curveWidth) * (curveDepth) ) >> 12);
 
             int x2 = (i + 1);
-            int y2 = yOffset + ((sinLerp(((i - xOffset) + 1) * curveWidth) * (curveDepth) ) >> 12);
+            int y2 = yOffset + ((_sinLerp(((i - xOffset) + 1) * curveWidth) * (curveDepth) ) >> 12);
 
             int pivotY = 0;
             if (wallSide == direction::BOTTOM) { pivotY = SCREEN_HEIGHT; };
@@ -160,7 +162,7 @@ namespace Animator {
     int fullDancingStarfishHelper(int i, int smoothProgress, int radius, int shimmerRot) {
         int shimmerDensity = 7;
         int shimmerWidth = 4 + smoothProgress;
-        int r = radius + ((cosLerp(i * shimmerDensity + shimmerRot) * shimmerWidth) >> 12);
+        int r = radius + ((_cosLerp(i * shimmerDensity + shimmerRot) * shimmerWidth) >> 12);
         if (r < 0) r = 0;
         r = r * r * r / 1000 + 10;
         return r;
@@ -172,14 +174,14 @@ namespace Animator {
 
         int r = radius / 2 + smoothProgress / 3;
 
-        int currAngle = angleToDegrees(i);
+        int currAngle = _angleToDegrees(i);
 
         bool betweenIfStartSmall = currAngle > startAngle && currAngle < endAngle;
         bool betweenIfStartBig = currAngle > startAngle || currAngle < endAngle;
         
         if ( (startAngle < endAngle && betweenIfStartSmall) || (startAngle > endAngle && betweenIfStartBig) ) { 
             //smooth out effect so it fades to nothing near angle extents
-            int rx = radius + ((cosLerp(i * shimmerDensity + shimmerRot) * shimmerWidth) >> 12);
+            int rx = radius + ((_cosLerp(i * shimmerDensity + shimmerRot) * shimmerWidth) >> 12);
             rx = rx * rx * rx / 1000 + 10;
 
             //find dist from curr to start (account for wrap)
@@ -203,7 +205,7 @@ namespace Animator {
     }
 
     void dancingStarfish(Vec2d pos, int progress, int radius, bool partial=false, int startAngle=0, int endAngle = 360) {
-        int smoothProgress = sinLerp((progress * 32767) / 100) / 1000;
+        int smoothProgress = _sinLerp((progress * 32767) / 100) / 1000;
         if (smoothProgress < 0) smoothProgress /= 2;
        
         //int radius = 20;
@@ -231,14 +233,14 @@ namespace Animator {
             if (!partial) r = fullDancingStarfishHelper(i, smoothProgress, radius, shimmerRot);
             else r = partialDancingStarfishHelper(i, smoothProgress, radius, startAngle, endAngle, shimmerRot);
             
-            int x = (cosLerp(i) * (r) ) >> 12;
-            int y = (sinLerp(i) * (r) ) >> 12;
+            int x = (_cosLerp(i) * (r) ) >> 12;
+            int y = (_sinLerp(i) * (r) ) >> 12;
 
             if (!partial) r2 = fullDancingStarfishHelper(i + step, smoothProgress, radius, shimmerRot);
             else r2 = partialDancingStarfishHelper(i + step, smoothProgress, radius, startAngle, endAngle, shimmerRot);
 
-            int x2 = (cosLerp(i + step) * (r2) ) >> 12;
-            int y2 = (sinLerp(i + step) * (r2) ) >> 12;
+            int x2 = (_cosLerp(i + step) * (r2) ) >> 12;
+            int y2 = (_sinLerp(i + step) * (r2) ) >> 12;
 
             // draw a triangle
             vectorTriangle( xOrigin + x, yOrigin + y,
@@ -330,7 +332,7 @@ namespace Animator {
         if (shakeX > shakeWidth) shakeX = shakeWidth * 2 - shakeX;
         shakeX -= shakeWidth / 2;
         
-        int shakeY = sinLerp(progress * 600) / 1500;
+        int shakeY = _sinLerp(progress * 600) / 1500;
 
         int startSize = 10;
         int endSize = 12;
@@ -366,7 +368,7 @@ namespace Animator {
         if (t >= 100) return;
         if (t < 0) t = 0;
         int posRadius = lerp(startRadius, endRadius, t);
-        int rot = degreesToAngle(t * 180 / 100);
+        int rot = _degreesToAngle(t * 180 / 100);
         if (t > 70) particleRadius = 4;
         if (t > 80) particleRadius = 3;
         if (t > 90) particleRadius = 2;
@@ -375,8 +377,8 @@ namespace Animator {
 
         for (i = 0; i < numParticles; i++) {
             int angle = i * (BRAD_PI * 2 / numParticles);
-            int partX = (cosLerp(angle + rot) * (posRadius) ) >> 12;
-            int partY = (sinLerp(angle + rot) * (posRadius) ) >> 12;
+            int partX = (_cosLerp(angle + rot) * (posRadius) ) >> 12;
+            int partY = (_sinLerp(angle + rot) * (posRadius) ) >> 12;
 
             vectorCircle(pos.x + partX, pos.y + partY, particleRadius, {31, 31, 31}, ANIMATION_MG_LAYER);
         }

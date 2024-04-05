@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <iostream>
 #include "../noteDefinitions.h"
 #include "engineTypes.h"
 #include "../sysWrappers/debugTools.h"

@@ -2,7 +2,6 @@
 #include "../sysWrappers/vectorShapes.h"
 #include <vector>
 #include "../sysWrappers/debugTools.h"
-#include <nds/arm9/console.h>
 #include "../sysWrappers/input.h"
 #include "../sysWrappers/debugTools.h"
 #include "../sceneObject.h"
@@ -134,7 +133,7 @@ class MainMenu : public SceneObject {
             }
         }
 
-        consoleClear();
+        Debugger::clearConsole();
         Debugger::framePrint("buttons");
 
         return sceneStates::CURRENT;

@@ -1,8 +1,18 @@
 #pragma once
 
 #include <tuple>
-#include "genericTypes.h"
+#include "../genericTypes.h"
+#include <nds/ndstypes.h>
 
+
+#define _angleToDegrees(angle)   ((angle) * 360 / (1 << 15))
+
+#define _degreesToAngle(degrees) ((degrees) * (1 << 15) / 360)
+
+
+s16 _cosLerp(s16 angle);
+
+s16 _sinLerp(s16 angle);
 
 int intAtan2(int y, int x);
 
