@@ -13,9 +13,10 @@ objects that change flow of game (eg main menu button) can tell this object to d
 
 
 
-SceneManager::SceneManager() {
+SceneManager::SceneManager(AudioPlayer _audioPlayer) {
+    audioPlayer = _audioPlayer;
     currentScene = new MainMenu();
-    currentScene->load();
+    currentScene->load(audioPlayer);
 }
 
 void SceneManager::newScene(sceneStates scene) {
@@ -31,7 +32,7 @@ void SceneManager::newScene(sceneStates scene) {
         return;
     }
 
-    currentScene->load();
+    currentScene->load(audioPlayer);
 }
 
 void SceneManager::update() {

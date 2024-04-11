@@ -30,7 +30,9 @@ int main( int argc, char *argv[] )
 	//EngineController engineController;
 	//engineController.init();
 
-	SceneManager manager;
+	AudioPlayer player;
+
+	SceneManager manager = SceneManager(player);
 
 	while(1) {
 		Debugger::resetFrameLines();

@@ -14,7 +14,7 @@ class EngineController : public SceneObject {
 
     public:
 
-    void load () override;
+    void load (AudioPlayer _audioPlayer) override;
 
     sceneStates update() override;
 

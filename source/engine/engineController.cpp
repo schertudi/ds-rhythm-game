@@ -5,11 +5,11 @@
 
 
 
-void EngineController::load () {
+void EngineController::load (AudioPlayer _audioPlayer) {
     frame = 0;
     combo = 0;
     isAutomatedPlay = false;
-    audioPlayer = AudioPlayer();
+    audioPlayer = _audioPlayer;
     timeTracker.init(bpm, numSubBeats);
     
     //load in level data at this point too
@@ -23,6 +23,7 @@ void EngineController::unload () {
 }
 
 sceneStates EngineController::update() {
+    audioPlayer.frameUpdate();
     frame += 1;
     int oldEnergyLevel = energyLevelTracker.getEnergyLevel();
 

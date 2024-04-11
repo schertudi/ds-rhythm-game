@@ -4,11 +4,7 @@
 #include "../../sysWrappers/mathHelpers.h"
 #include "../../layerDefinitions.h"
 #include "../engineTypes.h"
-
-//TODO move to constants file
-#define SCREEN_HEIGHT 192
-#define SCREEN_WIDTH  256
-#define BRAD_PI (1 << 14)
+#include "../../constants.h"
 
 namespace Animator {
 
