@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <tuple>
-#include <nds/ndstypes.h>
-#include "../../vscode_fix.h"
 #include "../../sysWrappers/vectorShapes.h"
 #include "../../sysWrappers/mathHelpers.h"
 #include "../../layerDefinitions.h"
