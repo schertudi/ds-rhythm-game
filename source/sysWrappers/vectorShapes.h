@@ -10,5 +10,7 @@ void vectorWideningLine(int x1, int y1, int x2, int y2, int width1, int width2, 
 void vectorTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Colour c, int depth);
 void startShape();
 void endShape();
+void startDrawingFrame();
+void endDrawingFrame();
 
 #endif // VECTORSHAPES_H

@@ -21,5 +21,7 @@ class AudioPlayer {
     void setOctave(int _octave);
 
     void enableJingle();
+
+    void frameUpdate();
 };
 

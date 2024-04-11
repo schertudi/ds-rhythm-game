@@ -11,7 +11,6 @@
 //inputs: click beat on green to play it, press left trigger (Q key on melonDS) to toggle automated/manual playthrough
 
 
-
 int main( int argc, char *argv[] )
 {
 	glScreen2D();
@@ -36,10 +35,8 @@ int main( int argc, char *argv[] )
 	while(1) {
 		Debugger::resetFrameLines();
 		
-		//engineController.update();
 
 		manager.update();
-
 		Debugger::render();
 
 		glFlush(0);

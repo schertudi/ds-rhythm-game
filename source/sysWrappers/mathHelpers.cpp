@@ -22,7 +22,7 @@ s16 _sinLerp(s16 angle) {
     return sinLerp(angle);
 }
 
-int32 mySqrtf32(int32 a)
+int32 _sqrtf32(int32 a)
 {
 	REG_SQRTCNT = SQRT_64;
 
@@ -89,7 +89,7 @@ int inverseLerp(int a, int b, int value) {
 
 Vec2d normalizeVec(Vec2d vec) { //returns to 2dp, so 100 -> 1.0
     int32 input = (vec.x * vec.x + vec.y * vec.y) << 12;
-    int sqrtFixed = mySqrtf32( input );
+    int sqrtFixed = _sqrtf32( input );
     //int sqrtInt = sqrtFixed >> 12;
     //int sqrtFlt = sqrtFixed & 0xFFF;
     int xFixed = vec.x << 12;
@@ -116,7 +116,7 @@ int sqrDist(Vec2d a, Vec2d b) {
 
 int dist(Vec2d a, Vec2d b) {
     int32 input = sqrDist(a, b) << 12;
-    return mySqrtf32(input) >> 12;
+    return _sqrtf32(input) >> 12;
 }
 
 Colour lerpColour(Colour c1, Colour c2, int t) {

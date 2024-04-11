@@ -67,6 +67,9 @@ void AudioPlayer::startMusic() {
     mmJingle(MOD_IEVAN_MUTE2);
 }
 
+void AudioPlayer::frameUpdate() {
+}
+
 void AudioPlayer::metronome(int beat) {
     mmEffectCancel(SFX_CLICK1);
     mmEffectCancel(SFX_CLICK2);

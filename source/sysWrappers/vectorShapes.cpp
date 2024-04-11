@@ -43,7 +43,9 @@ void vectorRect(int x1, int y1, int x2, int y2, Colour c, int depth) {
 }
 
 void vectorTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Colour c, int depth) {
+    gl2dCustom::glBegin2D(); //TODO add this
     gl2dCustom::glTriangleFilled(x1, y1, x2, y2, x3, y3, RGB15(c.r, c.g, c.b), depth);
+    gl2dCustom::glEnd2D();
 }
 
 void vectorThickLine(int x1, int y1, int x2, int y2, int lineWidth, Colour c, int depth, bool caps) {
@@ -82,4 +84,12 @@ void startShape() {
 
 void endShape() {
     gl2dCustom::glEnd2D();
+}
+
+void startDrawingFrame() {
+
+}
+
+void endDrawingFrame() {
+    
 }

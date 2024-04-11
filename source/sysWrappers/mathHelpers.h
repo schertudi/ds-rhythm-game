@@ -9,10 +9,24 @@
 
 #define _degreesToAngle(degrees) ((degrees) * (1 << 15) / 360)
 
-
+/*! \brief fixed point cosine
+	\param angle (-32768 to 32767)
+	\return 4.12 fixed point number with the range [-1, 1]
+*/
 s16 _cosLerp(s16 angle);
 
+/*! \brief fixed point sine
+	\param angle (-32768 to 32767)
+	\return 4.12 fixed point number with the range [-1, 1]
+*/
 s16 _sinLerp(s16 angle);
+
+/**
+*   \brief Fixed point sqrt
+*   \param a Takes 20.12
+*   \return returns 20.12 result
+*/
+int32 _sqrtf32(int32 a);
 
 int intAtan2(int y, int x);
 
