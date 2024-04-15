@@ -14,7 +14,7 @@ class EngineController : public SceneObject {
 
     public:
 
-    void load (AudioPlayer _audioPlayer) override;
+    void load (AudioPlayer* _audioPlayer) override;
 
     sceneStates update() override;
 
@@ -29,7 +29,7 @@ class EngineController : public SceneObject {
     int numSubBeats = 2;
     int numBeatsInBar = 4;
 
-    AudioPlayer audioPlayer;
+    AudioPlayer* audioPlayer;
     SongTimeTracker timeTracker;
     AnimationCommandManager animationCommandManager;
     HitBeatUpdater path;

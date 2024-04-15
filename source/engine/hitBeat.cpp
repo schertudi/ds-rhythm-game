@@ -119,8 +119,8 @@ int SingleHitBeat::getBeatProgress(int globalBeat, int progressToNext, int margi
     }
 }
 
-void SingleHitBeat::playSound(AudioPlayer man) {
-    man.playNote(length, pitch);
+void SingleHitBeat::playSound(AudioPlayer* man) {
+    man->playNote(length, pitch);
 }
 
 
@@ -247,6 +247,6 @@ int SliderHitBeat::getBeatProgress(int globalBeat, int progressToNext, int margi
     return 300;
 }
 
-void SliderHitBeat::playSound(AudioPlayer man) {
-    man.playNote(noteLength, pitch);
+void SliderHitBeat::playSound(AudioPlayer* man) {
+    man->playNote(noteLength, pitch);
 }

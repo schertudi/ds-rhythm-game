@@ -143,7 +143,7 @@ void HitBeatUpdater::deactivateBeat(int beatStart, int currBeat) {
 }
 
 
-void HitBeatUpdater::playSound(int beatStart, AudioPlayer man) {
+void HitBeatUpdater::playSound(int beatStart, AudioPlayer* man) {
     for (size_t i = 0; i < spawnedBeats.size(); i++) {
         if (spawnedBeats[i]->getStartBeat() == beatStart) {
             spawnedBeats[i]->playSound(man);

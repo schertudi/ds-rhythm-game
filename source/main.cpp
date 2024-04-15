@@ -30,7 +30,7 @@ int main( int argc, char *argv[] )
 	//EngineController engineController;
 	//engineController.init();
 
-	AudioPlayer player;
+	AudioPlayer* player = new AudioPlayer();
 
 	SceneManager manager = SceneManager(player);
 

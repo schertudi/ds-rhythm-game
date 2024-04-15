@@ -5,7 +5,7 @@
 
 
 
-void EngineController::load (AudioPlayer _audioPlayer) {
+void EngineController::load (AudioPlayer* _audioPlayer) {
     frame = 0;
     combo = 0;
     isAutomatedPlay = false;
@@ -23,7 +23,7 @@ void EngineController::unload () {
 }
 
 sceneStates EngineController::update() {
-    audioPlayer.frameUpdate();
+    //audioPlayer->frameUpdate();
     frame += 1;
     int oldEnergyLevel = energyLevelTracker.getEnergyLevel();
 
@@ -34,7 +34,7 @@ sceneStates EngineController::update() {
 
     if (beatStatus > 0) {
         if (beatStatus == 2 && songPos.globalBeat == 0) { //just changed main beat to 0
-            audioPlayer.startMusic();
+            audioPlayer->startMusic();
         }
         
         path.onBeat(songPos);
@@ -52,7 +52,7 @@ sceneStates EngineController::update() {
 
     int energyLevel = energyLevelTracker.getEnergyLevel();
     if (energyLevel > oldEnergyLevel) {
-        audioPlayer.enableJingle();
+        audioPlayer->enableJingle();
     }
     animationCommandManager.updateAnimations(songPos, beatStates, penPos, energyLevel);
 
@@ -75,10 +75,10 @@ sceneStates EngineController::update() {
 
 void EngineController::playMetronome(int beatStatus) {
     if (beatStatus == 1) {
-        audioPlayer.metronome(1);
+        audioPlayer->metronome(1);
     }
     if (beatStatus == 2) {
-        audioPlayer.metronome(2);
+        audioPlayer->metronome(2);
     }
 }
 

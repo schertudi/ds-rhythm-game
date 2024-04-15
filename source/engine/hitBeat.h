@@ -24,7 +24,7 @@ class HitBeatAbstract {
     virtual Vec2d getStartPos() = 0;
     virtual Vec2d getEndPos() = 0;
     virtual int getBeatProgress(int globalBeat, int progressToNext, int margin) = 0;
-    virtual void playSound(AudioPlayer man) = 0;
+    virtual void playSound(AudioPlayer* man) = 0;
 
     void deactivate(int beat);
 
@@ -65,7 +65,7 @@ class SingleHitBeat : public HitBeatAbstract {
 
     int getBeatProgress(int globalBeat, int progressToNext, int margin) override;
 
-    void playSound(AudioPlayer man) override;
+    void playSound(AudioPlayer* man) override;
 
 };
 
@@ -101,5 +101,5 @@ class SliderHitBeat : public HitBeatAbstract {
 
     int getBeatProgress(int globalBeat, int progressToNext, int margin) override;
 
-    void playSound(AudioPlayer man) override;
+    void playSound(AudioPlayer* man) override;
 };

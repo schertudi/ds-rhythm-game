@@ -13,7 +13,7 @@ objects that change flow of game (eg main menu button) can tell this object to d
 
 
 
-SceneManager::SceneManager(AudioPlayer _audioPlayer) {
+SceneManager::SceneManager(AudioPlayer* _audioPlayer) {
     audioPlayer = _audioPlayer;
     currentScene = new MainMenu();
     currentScene->load(audioPlayer);

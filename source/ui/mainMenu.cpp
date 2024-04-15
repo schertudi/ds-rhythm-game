@@ -85,7 +85,7 @@ class MainMenu : public SceneObject {
     
 
     public:
-    void load(AudioPlayer _audioPlayer) override {
+    void load(AudioPlayer* _audioPlayer) override {
         
 
         int height = 192;

@@ -27,7 +27,7 @@ class HitBeatUpdater {
 
     void deactivateBeat(int beatStart, int currBeat);
 
-    void playSound(int beatStart, AudioPlayer man);
+    void playSound(int beatStart, AudioPlayer* man);
 
     private:
 

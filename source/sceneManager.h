@@ -10,7 +10,7 @@ class SceneManager {
 
 
     public:
-    SceneManager(AudioPlayer audioPlayer);
+    SceneManager(AudioPlayer* audioPlayer);
 
     void newScene(sceneStates scene);
 
@@ -18,6 +18,6 @@ class SceneManager {
 
     private:
     SceneObject* currentScene;
-    AudioPlayer audioPlayer;
+    AudioPlayer* audioPlayer;
  
 };
